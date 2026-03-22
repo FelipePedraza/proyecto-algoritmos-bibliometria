@@ -53,3 +53,16 @@ proyecto-algoritmos-bibliometria/
 ├── tests/                # Pruebas unitarias
 ├── app.py                # Punto de entrada de la aplicación (Streamlit/Flask/FastAPI)
 └── requirements.txt      # Dependencias del proyecto
+
+```
+
+## Bases de datos disponibles en la Universidad del Quindio
+
+| Base de datos | Formatos de exportación | Notas |
+|---------------|------------------------|-------|
+| ACM Digital Library | BibTeX, CSV | CSV tiene columna "Publication Year" |
+| ScienceDirect | BibTeX, RIS, CSV | CSV tiene "Source title" e "Index Keywords" |
+| SAGE Journals | RIS, BibTeX | — |
+| Scopus | BibTeX, RIS, CSV | CSV similar a ScienceDirect |
+
+Acceso: [library.uniquindio.edu.co/databases](https://library.uniquindio.edu.co/databases)

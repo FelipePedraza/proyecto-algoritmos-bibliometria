@@ -1,0 +1,13 @@
+# Entornos virtuales
+venv/
+env/
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+
+# Ignorar la carpeta de datos (para no subir bases de datos pesadas a GitHub)
+data/
+
+# Variables de entorno
+.env
