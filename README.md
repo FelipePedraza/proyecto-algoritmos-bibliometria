@@ -47,10 +47,20 @@ proyecto-algoritmos-bibliometria/
 │   ├── r3_frequency/     # Lógica del Requerimiento 3 (Frecuencia y términos)
 │   ├── r4_clustering/    # Lógica del Requerimiento 4 (Agrupamiento jerárquico)
 │   ├── r5_visualization/ # Lógica del Requerimiento 5 (Visualización de datos)
+│   ├── exporters/        # Exportación de resultados a PDF/CSV/imagenes
 │   └── utils/            # Funciones compartidas (limpieza de texto, I/O)
 │
-├── docs/                 # Documentación técnica y de arquitectura
+├── config/               # Rutas, constantes el proyecto, parámetros y configuración general
 ├── tests/                # Pruebas unitarias
+├── reports/
+│   ├── pdf/                  # Informes finales exportados en PDF
+│   ├── images/               # Gráficos, mapas de calor, nubes de palabras, dendrogramas
+│   └── tables/               # Tablas exportadas en CSV/Excel si las necesitas
+│
+├── docs/
+│   ├── architecture/         # Documento de arquitectura y diseño
+│   └── requirements/         # Explicación técnica por requerimiento (R1, R2, R3, R4, R5, R6)
+│
 ├── app.py                # Punto de entrada de la aplicación (Streamlit/Flask/FastAPI)
 └── requirements.txt      # Dependencias del proyecto
 
