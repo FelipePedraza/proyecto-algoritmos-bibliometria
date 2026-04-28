@@ -1,16 +1,16 @@
 # Dependencias del proyecto
 # ── Core ──────────────────────────────────────────────────────────────────────
 streamlit==1.35.0
-pandas==2.2.2
+pandas>=2.2.2
 
 # ── Parseo de formatos bibliográficos ─────────────────────────────────────────
 bibtexparser==1.4.1
-rispy==0.9.1
+rispy==0.10.0
 openpyxl==3.1.2
 
 # ── Similitud de texto ────────────────────────────────────────────────────────
 fuzzywuzzy==0.18.0
-python-Levenshtein==0.25.1
+rapidfuzz==3.6.2
 
 # ── Utilidades ────────────────────────────────────────────────────────────────
 unidecode==1.3.8
