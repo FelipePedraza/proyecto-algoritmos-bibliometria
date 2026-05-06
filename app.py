@@ -45,8 +45,8 @@ if page_key == "r1":
     render()
 
 elif page_key == "r2":
-    st.title("R2 · Similitud Textual")
-    st.info("EN CURSO Requerimiento 2 en desarrollo.")
+    from src.r2_similarity.page import render as render_r2
+    render_r2()
 
 elif page_key == "r3":
     st.title("R3 · Frecuencia de Términos")
