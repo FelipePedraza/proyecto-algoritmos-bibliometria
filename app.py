@@ -53,8 +53,8 @@ elif page_key == "r3":
     st.info("EN CURSO Requerimiento 3 en desarrollo.")
 
 elif page_key == "r4":
-    st.title("R4 · Agrupamiento Jerárquico")
-    st.info("EN CURSO Requerimiento 4 en desarrollo.")
+    from src.r4_clustering.page import render as render_r4
+    render_r4()
 
 elif page_key == "r5":
     st.title("R5 · Visualización Científica")
