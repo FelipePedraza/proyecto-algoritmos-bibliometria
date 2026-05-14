@@ -175,18 +175,31 @@ def detect_country_column(df: pd.DataFrame) -> Optional[str]:
     """
     Detecta automáticamente columnas que contengan información geográfica.
 
-    Busca columnas cuyos nombres incluyan 'country', 'affili', 'institution'
-    o 'organization' (case-insensitive).
+    Busca por prioridad columnas cuyos nombres incluyan alguna de las
+    palabras clave (case-insensitive). El orden importa: primero se
+    busca una coincidencia exacta de 'country', luego 'authorlocation'
+    (columna de EBSCO), y después términos más genéricos.
 
     Returns
     -------
     Nombre de la primera columna candidata, o None.
     """
-    priority = ["country", "affili", "institution", "organization", "address"]
+    priority = [
+        "country",          # columna canónica del proyecto
+        "authorlocation",   # EBSCO: authorLocations
+        "location",         # variantes genéricas
+        "affili",           # afiliación institucional
+        "institution",
+        "organization",
+        "address",
+    ]
+    col_lower = {col: col.lower() for col in df.columns}
     for keyword in priority:
-        for col in df.columns:
-            if keyword in col.lower():
-                return col
+        for col, col_lc in col_lower.items():
+            if keyword in col_lc:
+                # Ignorar columnas completamente vacías
+                if df[col].str.strip().replace("", pd.NA).notna().any():
+                    return col
     return None
 
 

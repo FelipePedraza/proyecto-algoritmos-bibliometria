@@ -418,10 +418,19 @@ def _render_quality_metrics(coph_scores: dict, best_algo: str, result: dict):
 
     df_quality = pd.DataFrame(rows)
 
+    def _highlight_best(s):
+        """Resalta el valor máximo con fondo y texto legibles."""
+        is_max = s == s.max()
+        return [
+            "background-color: rgba(39, 174, 96, 0.25); color: #2ecc71; font-weight: bold"
+            if v else ""
+            for v in is_max
+        ]
+
     st.dataframe(
-        df_quality.style.highlight_max(
+        df_quality.style.apply(
+            _highlight_best,
             subset=["Coeficiente Cofenético"],
-            color="#d4edda",
         ),
         use_container_width=True,
         hide_index=True,

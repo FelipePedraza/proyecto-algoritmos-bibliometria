@@ -1,22 +1,22 @@
 """
-Motor de unificación bibliográfica para el Requerimiento 1.
+Motor de unificacion bibliografica para el Requerimiento 1.
 
 Proceso:
-  1. Recibe dos DataFrames (ACM + ScienceDirect) con esquema canónico.
-  2. Concatena ambos manteniendo el campo 'source_db'.
-  3. Detecta duplicados comparando títulos normalizados con similitud
+  1. Recibe dos o mas DataFrames (ACM, ScienceDirect, EBSCO) con esquema canonico.
+  2. Concatena todos manteniendo el campo 'source_db'.
+  3. Detecta duplicados comparando titulos normalizados con similitud
      de Levenshtein (umbral configurable, default 0.92).
-  4. Para cada grupo de duplicados conserva el registro más completo
-     (mayor número de campos no vacíos) y prioriza ScienceDirect
-     por tener habitualmente abstracts más completos.
+  4. Para cada grupo de duplicados conserva el registro mas completo
+     (mayor numero de campos no vacios) y prioriza ScienceDirect.
   5. Exporta:
-     - unified.csv   → registros únicos enriquecidos
-     - duplicates.csv → registros descartados con referencia al que se conservó
+     - unified.csv   -> registros unicos enriquecidos
+     - duplicates.csv -> registros descartados con referencia al que se conservo
 """
 
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -25,49 +25,54 @@ from src.utils.text_utils import normalize_title, levenshtein_similarity
 
 logger = logging.getLogger(__name__)
 
-# ── Constantes ──────────────────────────────────────────────────────────────
-DEFAULT_THRESHOLD   = 0.92   # similitud mínima para considerar duplicado
-PRIORITY_DB         = "ScienceDirect"   # BD preferida al elegir representante
-OUTPUT_UNIFIED      = "data/processed/unified.csv"
-OUTPUT_DUPLICATES   = "data/duplicates/duplicates.csv"
+DEFAULT_THRESHOLD  = 0.92
+PRIORITY_DB        = "ScienceDirect"
+OUTPUT_UNIFIED     = "data/processed/unified.csv"
+OUTPUT_DUPLICATES  = "data/duplicates/duplicates.csv"
 
 
-# ── Función principal ────────────────────────────────────────────────────────
 def unify_databases(
-    df_acm: pd.DataFrame,
-    df_sd: pd.DataFrame,
-    threshold: float = DEFAULT_THRESHOLD,
-    output_dir: str | Path = ".",
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    df_acm,
+    df_sd,
+    threshold=DEFAULT_THRESHOLD,
+    output_dir=".",
+    extra_sources=None,
+):
     """
-    Unifica dos DataFrames bibliográficos eliminando duplicados.
+    Unifica dos o mas DataFrames bibliograficos eliminando duplicados.
 
     Parameters
     ----------
-    df_acm       : DataFrame de ACM (esquema canónico + source_db).
-    df_sd        : DataFrame de ScienceDirect (esquema canónico + source_db).
-    threshold    : Umbral de similitud Levenshtein para declarar duplicado.
-    output_dir   : Directorio raíz del proyecto para escribir los CSV.
+    df_acm         : DataFrame de ACM (esquema canonico + source_db).
+    df_sd          : DataFrame de ScienceDirect (esquema canonico + source_db).
+    threshold      : Umbral de similitud Levenshtein para declarar duplicado.
+    output_dir     : Directorio raiz del proyecto para escribir los CSV.
+    extra_sources  : DataFrames adicionales (p. ej. EBSCO) con el mismo
+                     esquema canonico. Se incluyen en la deduplicacion.
 
     Returns
     -------
     (df_unified, df_duplicates)
     """
-    logger.info("Iniciando unificación: ACM=%d, ScienceDirect=%d registros",
-                len(df_acm), len(df_sd))
+    all_dfs = [df for df in [df_acm, df_sd] if df is not None and len(df) > 0]
+    if extra_sources:
+        all_dfs.extend([df for df in extra_sources if df is not None and len(df) > 0])
+
+    total = sum(len(d) for d in all_dfs)
+    logger.info("Iniciando unificacion: %d fuentes, %d registros totales", len(all_dfs), total)
 
     # 1. Concatenar
-    df_all = pd.concat([df_acm, df_sd], ignore_index=True)
+    df_all = pd.concat(all_dfs, ignore_index=True)
     df_all["_norm_title"] = df_all["title"].apply(normalize_title)
-    df_all["_record_id"] = df_all.index  # ID interno temporal
+    df_all["_record_id"] = df_all.index
 
     # 2. Detectar grupos de duplicados
     groups = _find_duplicate_groups(df_all, threshold)
 
-    # 3. Para cada grupo, elegir representante y marcar descartados
-    keep_ids:    list[int] = []
-    discard_ids: list[int] = []
-    duplicate_meta: list[dict] = []   # info extra para el archivo duplicates.csv
+    # 3. Elegir representante por grupo
+    keep_ids = []
+    discard_ids = []
+    duplicate_meta = []
 
     for group in groups:
         representative_id = _choose_representative(df_all, group)
@@ -82,16 +87,19 @@ def unify_databases(
                     "_kept_db":    df_all.loc[representative_id, "source_db"],
                 })
 
-    # Registros que no pertenecen a ningún grupo de duplicados → se conservan
     all_grouped = {rid for g in groups for rid in g}
     for idx in df_all.index:
         if idx not in all_grouped:
             keep_ids.append(idx)
 
     # 4. Construir DataFrames de salida
+    # Incluye 'country' para preservar datos geograficos de EBSCO (authorLocations)
     output_cols = ["title", "authors", "year", "source", "doi",
                    "abstract", "document_type", "url", "issn",
-                   "keywords", "source_db"]
+                   "keywords", "country", "source_db"]
+    for col in output_cols:
+        if col not in df_all.columns:
+            df_all[col] = ""
 
     df_unified = (
         df_all.loc[sorted(set(keep_ids)), output_cols]
@@ -99,7 +107,11 @@ def unify_databases(
         .reset_index(drop=True)
     )
 
-    df_dup_base = df_all.loc[discard_ids, output_cols].copy() if discard_ids else pd.DataFrame(columns=output_cols)
+    df_dup_base = (
+        df_all.loc[discard_ids, output_cols].copy()
+        if discard_ids
+        else pd.DataFrame(columns=output_cols)
+    )
 
     if duplicate_meta:
         df_dup_meta = pd.DataFrame(duplicate_meta).set_index("_record_id")
@@ -107,7 +119,7 @@ def unify_databases(
     else:
         df_duplicates = df_dup_base.reset_index(drop=True)
 
-    logger.info("Resultado: %d únicos, %d duplicados eliminados",
+    logger.info("Resultado: %d unicos, %d duplicados eliminados",
                 len(df_unified), len(df_duplicates))
 
     # 5. Exportar a CSV
@@ -116,16 +128,10 @@ def unify_databases(
     return df_unified, df_duplicates
 
 
-# ── Helpers internos ─────────────────────────────────────────────────────────
-def _find_duplicate_groups(
-    df: pd.DataFrame, threshold: float
-) -> list[list[int]]:
+def _find_duplicate_groups(df, threshold):
     """
-    Agrupa índices de registros cuyo título normalizado supera el umbral
+    Agrupa indices de registros cuyo titulo normalizado supera el umbral
     de similitud. Usa union-find para manejar grupos transitivos.
-
-    Algoritmo O(n²) sobre títulos normalizados. Aceptable para corpus
-    bibliométricos típicos (< 5 000 registros).
     """
     n = len(df)
     norm_titles = df["_norm_title"].tolist()
@@ -149,27 +155,20 @@ def _find_duplicate_groups(
             if levenshtein_similarity(norm_titles[i], norm_titles[j]) >= threshold:
                 union(i, j)
 
-    # Agrupar por raíz del union-find
-    from collections import defaultdict
-    clusters: dict[int, list[int]] = defaultdict(list)
+    clusters = defaultdict(list)
     for i in range(n):
         clusters[find(i)].append(record_ids[i])
 
-    # Solo devolver grupos con 2+ miembros (son los duplicados)
     return [g for g in clusters.values() if len(g) > 1]
 
 
-def _choose_representative(df: pd.DataFrame, group: list[int]) -> int:
+def _choose_representative(df, group):
     """
-    Elige el registro más completo de un grupo de duplicados.
-    Criterios (en orden de prioridad):
-      1. Proviene de la BD prioritaria (ScienceDirect).
-      2. Mayor número de campos no vacíos.
-      3. Abstract más largo (mayor riqueza de información).
+    Elige el registro mas completo de un grupo de duplicados.
+    Criterios: 1) BD prioritaria  2) campos no vacios  3) abstract mas largo.
     """
     candidates = df.loc[group].copy()
 
-    # Puntaje de completitud
     scored = candidates.apply(
         lambda row: (
             int(row["source_db"] == PRIORITY_DB) * 1000
@@ -181,11 +180,7 @@ def _choose_representative(df: pd.DataFrame, group: list[int]) -> int:
     return int(scored.idxmax())
 
 
-def _export(
-    df_unified: pd.DataFrame,
-    df_duplicates: pd.DataFrame,
-    output_dir: str | Path,
-) -> None:
+def _export(df_unified, df_duplicates, output_dir):
     """Escribe los dos CSV de salida creando directorios si no existen."""
     base = Path(output_dir)
 
@@ -198,5 +193,4 @@ def _export(
     df_unified.to_csv(unified_path,    index=False, encoding="utf-8-sig")
     df_duplicates.to_csv(duplicates_path, index=False, encoding="utf-8-sig")
 
-    logger.info("Archivos exportados:\n  → %s\n  → %s",
-                unified_path, duplicates_path)
+    logger.info("Archivos exportados:\n  -> %s\n  -> %s", unified_path, duplicates_path)

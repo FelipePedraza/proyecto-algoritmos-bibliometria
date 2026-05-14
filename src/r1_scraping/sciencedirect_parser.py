@@ -2,7 +2,7 @@
 Parser para archivos CSV exportados desde ScienceDirect (Elsevier).
 Cadena de búsqueda: "generative artificial intelligence"
 
-Columnas típicas de ScienceDirect CSV:
+Columnas tipicas de ScienceDirect CSV:
   Title, Authors, Year, Source title, DOI, Abstract,
   Document Type, Link, ISSN, Author Keywords, Index Keywords
 """
@@ -10,7 +10,7 @@ Columnas típicas de ScienceDirect CSV:
 import pandas as pd
 from pathlib import Path
 
-# Mapeo de columnas ScienceDirect → esquema canónico del proyecto
+# Mapeo de columnas ScienceDirect -> esquema canonico del proyecto
 SD_COLUMN_MAP = {
     "Title":            "title",
     "Authors":          "authors",
@@ -23,17 +23,17 @@ SD_COLUMN_MAP = {
     "ISSN":             "issn",
     "Author Keywords":  "keywords",
     "Index Keywords":   "index_keywords",
-    # Sinónimos posibles en distintas versiones de exportación
+    # Sinonimos posibles en distintas versiones de exportacion
     "Author(s)":        "authors",
     "Publication Year": "year",
     "Source":           "source",
 }
 
 
-def parse_sciencedirect_csv(filepath: str | Path) -> pd.DataFrame:
+def parse_sciencedirect_csv(filepath):
     """
     Lee un archivo CSV de ScienceDirect y retorna un DataFrame normalizado
-    con el esquema canónico del proyecto.
+    con el esquema canonico del proyecto.
 
     Parameters
     ----------
@@ -41,23 +41,24 @@ def parse_sciencedirect_csv(filepath: str | Path) -> pd.DataFrame:
 
     Returns
     -------
-    pd.DataFrame con columnas del esquema canónico y columna
+    pd.DataFrame con columnas del esquema canonico y columna
     adicional 'source_db' = 'ScienceDirect'.
     """
-    path = Path(filepath)
-    if not path.exists():
-        raise FileNotFoundError(f"Archivo ScienceDirect no encontrado: {path}")
+    if isinstance(filepath, (str, Path)):
+        path = Path(filepath)
+        if not path.exists():
+            raise FileNotFoundError(f"Archivo ScienceDirect no encontrado: {path}")
+        source = path
+    else:
+        source = filepath
 
-    # ScienceDirect suele exportar en UTF-8
-    df = pd.read_csv(path, encoding="utf-8-sig", dtype=str)
+    df = pd.read_csv(source, encoding="utf-8-sig", dtype=str)
     df.columns = df.columns.str.strip()
 
-    # Renombrar columnas conocidas
     rename_map = {col: SD_COLUMN_MAP[col]
                   for col in df.columns if col in SD_COLUMN_MAP}
     df = df.rename(columns=rename_map)
 
-    # Combinar keywords: Author Keywords + Index Keywords si ambas existen
     if "keywords" in df.columns and "index_keywords" in df.columns:
         df["keywords"] = df.apply(
             lambda row: _merge_keywords(row["keywords"], row["index_keywords"]),
@@ -67,9 +68,10 @@ def parse_sciencedirect_csv(filepath: str | Path) -> pd.DataFrame:
     elif "index_keywords" in df.columns:
         df.rename(columns={"index_keywords": "keywords"}, inplace=True)
 
-    # Asegurar esquema canónico completo
+    # Asegurar esquema canonico completo (incluye 'country')
     canonical_cols = ["title", "authors", "year", "source", "doi",
-                      "abstract", "document_type", "url", "issn", "keywords"]
+                      "abstract", "document_type", "url", "issn", "keywords",
+                      "country"]
     for col in canonical_cols:
         if col not in df.columns:
             df[col] = ""
@@ -77,7 +79,6 @@ def parse_sciencedirect_csv(filepath: str | Path) -> pd.DataFrame:
     df = df[canonical_cols].copy()
     df["source_db"] = "ScienceDirect"
 
-    # Limpieza básica
     df = df.fillna("").apply(
         lambda col: col.map(lambda v: "" if str(v).strip().lower() == "nan" else str(v).strip())
     )
@@ -87,9 +88,15 @@ def parse_sciencedirect_csv(filepath: str | Path) -> pd.DataFrame:
     return df
 
 
-def _merge_keywords(kw1: str, kw2: str) -> str:
-    """Une dos listas de keywords separadas por ';' eliminando duplicados."""
-    set1 = {k.strip().lower() for k in str(kw1).split(";") if k.strip()}
-    set2 = {k.strip().lower() for k in str(kw2).split(";") if k.strip()}
+def _merge_keywords(kw1, kw2):
+    """Une dos listas de keywords separadas por ; eliminando duplicados."""
+    set1 = set()
+    for k in str(kw1).split(";"):
+        if k.strip():
+            set1.add(k.strip().lower())
+    set2 = set()
+    for k in str(kw2).split(";"):
+        if k.strip():
+            set2.add(k.strip().lower())
     merged = sorted(set1 | set2)
     return "; ".join(merged) if merged else ""

@@ -2,13 +2,17 @@
 Requerimiento 1 — Interfaz Streamlit
 =====================================
 Permite al usuario:
-  1. Cargar los archivos CSV exportados desde ACM y ScienceDirect.
+  1. Cargar CSV exportados desde ACM, ScienceDirect y/o EBSCO.
   2. Ver una vista previa de cada base de datos.
   3. Ejecutar la unificación automática con detección de duplicados.
   4. Descargar:
        - unified.csv      (registros únicos)
        - duplicates.csv   (registros descartados)
   5. Ver estadísticas del proceso.
+
+EBSCO es la tercera fuente opcional; aporta la columna ``country``
+(mapeada desde ``authorLocations``) que habilita el mapa de calor
+geográfico en el Requerimiento 5.
 """
 
 import io
@@ -19,6 +23,7 @@ import streamlit as st
 
 from src.r1_scraping.acm_parser import parse_acm_csv
 from src.r1_scraping.sciencedirect_parser import parse_sciencedirect_csv
+from src.r1_scraping.ebsco_parser import parse_ebsco_csv
 from src.r1_scraping.unifier import unify_databases
 
 logger = logging.getLogger(__name__)
@@ -33,9 +38,13 @@ def render():
     st.title("Requerimiento 1: Automatización y Unificación")
     st.markdown(
         """
-        **Objetivo:** Cargar los archivos CSV exportados desde **ACM Digital Library**
-        y **ScienceDirect** con la cadena de búsqueda `"generative artificial intelligence"`,
-        unificarlos en un solo dataset y eliminar duplicados automáticamente.
+        **Objetivo:** Cargar los archivos CSV exportados desde **ACM Digital Library**,
+        **ScienceDirect** y/o **EBSCO** con la cadena de búsqueda
+        `"generative artificial intelligence"`, unificarlos en un solo dataset
+        y eliminar duplicados automáticamente.
+
+        > 💡 **EBSCO** es opcional pero recomendado: su columna `authorLocations`
+        > habilita el **mapa de calor geográfico** en el Requerimiento 5.
         """
     )
 
@@ -57,7 +66,7 @@ def render():
 
     # ── Carga de archivos ─────────────────────────────────────────────────────
     st.header("1. Carga de archivos")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.subheader("ACM Digital Library")
@@ -75,8 +84,19 @@ def render():
         if sd_file:
             st.success(f"✅ {sd_file.name} cargado")
 
+    with col3:
+        st.subheader("EBSCO *(opcional)*")
+        ebsco_file = st.file_uploader(
+            "Sube el CSV de EBSCO", type=["csv"], key="ebsco_upload",
+            help="Business Source Ultimate, Academic Search, etc. "
+                 "Aporta datos geográficos (authorLocations) para el R5.",
+        )
+        if ebsco_file:
+            st.success(f"✅ {ebsco_file.name} cargado")
+
     # ── Vista previa de los archivos ──────────────────────────────────────────
-    if acm_file or sd_file:
+    loaded_files = [f for f in [acm_file, sd_file, ebsco_file] if f is not None]
+    if loaded_files:
         st.header("2. Vista previa de los datos cargados")
 
     if acm_file:
@@ -85,7 +105,7 @@ def render():
                 df_acm_raw = pd.read_csv(acm_file, encoding="utf-8-sig", dtype=str)
                 st.dataframe(df_acm_raw.head(10), use_container_width=True)
                 st.caption(f"Total de filas: {len(df_acm_raw)}")
-                acm_file.seek(0)  # rebobinar para el parser
+                acm_file.seek(0)
             except Exception as e:
                 st.error(f"Error al previsualizar ACM: {e}")
 
@@ -99,35 +119,72 @@ def render():
             except Exception as e:
                 st.error(f"Error al previsualizar ScienceDirect: {e}")
 
+    if ebsco_file:
+        with st.expander("Vista previa EBSCO", expanded=False):
+            try:
+                df_ebsco_raw = pd.read_csv(ebsco_file, encoding="utf-8-sig", dtype=str)
+                st.dataframe(df_ebsco_raw.head(10), use_container_width=True)
+                st.caption(
+                    f"Total de filas: {len(df_ebsco_raw)}  •  "
+                    f"Columnas: {', '.join(df_ebsco_raw.columns.tolist())}"
+                )
+                # Indicar si authorLocations está presente
+                if "authorLocations" in df_ebsco_raw.columns:
+                    st.success("✅ Columna `authorLocations` detectada — el mapa geográfico estará disponible en R5.")
+                else:
+                    st.warning("⚠️ No se encontró la columna `authorLocations` en este CSV.")
+                ebsco_file.seek(0)
+            except Exception as e:
+                st.error(f"Error al previsualizar EBSCO: {e}")
+
     # ── Botón de unificación ──────────────────────────────────────────────────
     st.header("3. Unificación automática")
 
-    can_run = acm_file is not None and sd_file is not None
+    # Se necesita al menos un archivo para correr
+    n_loaded = sum(1 for f in [acm_file, sd_file, ebsco_file] if f is not None)
+    can_run = n_loaded >= 1
 
     if not can_run:
-        st.info("Sube ambos archivos CSV para habilitar la unificación.")
+        st.info("Sube al menos un archivo CSV para habilitar la unificación.")
 
     if can_run and st.button("Ejecutar unificación", type="primary"):
         with st.spinner("Procesando y detectando duplicados..."):
             try:
-                # Parsear con los módulos especializados
-                acm_file.seek(0)
-                sd_file.seek(0)
+                # Parsear sólo los archivos cargados; usar DataFrame vacío como placeholder
+                # para los que no fueron provistos (el unifier los filtra)
+                if acm_file:
+                    acm_file.seek(0)
+                    df_acm = parse_acm_csv(acm_file)
+                else:
+                    df_acm = pd.DataFrame()
 
-                df_acm = parse_acm_csv(acm_file)
-                df_sd  = parse_sciencedirect_csv(sd_file)
+                if sd_file:
+                    sd_file.seek(0)
+                    df_sd = parse_sciencedirect_csv(sd_file)
+                else:
+                    df_sd = pd.DataFrame()
+
+                extra = []
+                if ebsco_file:
+                    ebsco_file.seek(0)
+                    df_ebsco = parse_ebsco_csv(ebsco_file)
+                    extra.append(df_ebsco)
+                else:
+                    df_ebsco = pd.DataFrame()
 
                 df_unified, df_duplicates = unify_databases(
                     df_acm, df_sd,
                     threshold=threshold,
-                    output_dir=".",  # carpeta raíz del proyecto
+                    output_dir=".",
+                    extra_sources=extra if extra else None,
                 )
 
-                # Guardar en session_state para persistencia
-                st.session_state["r1_unified"]    = df_unified
-                st.session_state["r1_duplicates"] = df_duplicates
-                st.session_state["r1_acm_count"]  = len(df_acm)
-                st.session_state["r1_sd_count"]   = len(df_sd)
+                # Guardar en session_state para persistencia entre páginas
+                st.session_state["r1_unified"]      = df_unified
+                st.session_state["r1_duplicates"]   = df_duplicates
+                st.session_state["r1_acm_count"]    = len(df_acm)
+                st.session_state["r1_sd_count"]     = len(df_sd)
+                st.session_state["r1_ebsco_count"]  = len(df_ebsco)
 
             except Exception as e:
                 st.error(f"❌ Error durante la unificación: {e}")
@@ -137,22 +194,40 @@ def render():
     if "r1_unified" in st.session_state:
         df_unified    = st.session_state["r1_unified"]
         df_duplicates = st.session_state["r1_duplicates"]
-        acm_count     = st.session_state["r1_acm_count"]
-        sd_count      = st.session_state["r1_sd_count"]
+        acm_count     = st.session_state.get("r1_acm_count", 0)
+        sd_count      = st.session_state.get("r1_sd_count", 0)
+        ebsco_count   = st.session_state.get("r1_ebsco_count", 0)
+        total_input   = acm_count + sd_count + ebsco_count
 
         st.header("4. Resultados")
 
-        # Métricas
-        col_a, col_b, col_c, col_d = st.columns(4)
-        col_a.metric("Registros ACM",            acm_count)
-        col_b.metric("Registros ScienceDirect",  sd_count)
-        col_c.metric("Registros únicos",          len(df_unified),
-                     delta=f"-{acm_count + sd_count - len(df_unified)} duplicados")
-        col_d.metric("Duplicados eliminados",     len(df_duplicates))
+        # Métricas — mostrar sólo las fuentes que se usaron
+        metric_cols = st.columns(5)
+        metric_cols[0].metric("Registros ACM", acm_count)
+        metric_cols[1].metric("Registros ScienceDirect", sd_count)
+        metric_cols[2].metric("Registros EBSCO", ebsco_count)
+        metric_cols[3].metric(
+            "Registros únicos", len(df_unified),
+            delta=f"-{total_input - len(df_unified)} duplicados",
+        )
+        metric_cols[4].metric("Duplicados eliminados", len(df_duplicates))
+
+        # Advertencia si EBSCO no tiene datos geográficos en el resultado
+        if ebsco_count > 0:
+            has_country = (
+                "country" in df_unified.columns
+                and df_unified["country"].str.strip().replace("", pd.NA).notna().any()
+            )
+            if has_country:
+                st.success("✅ Datos geográficos (country) presentes en el dataset — el mapa del R5 estará activo.")
+            else:
+                st.warning("⚠️ EBSCO cargado pero sin datos en `authorLocations`. El mapa geográfico del R5 puede no funcionar.")
 
         # Tabla de registros unificados
         st.subheader("Registros unificados")
         display_cols = ["title", "authors", "year", "source", "source_db", "doi"]
+        if "country" in df_unified.columns:
+            display_cols.append("country")
         st.dataframe(
             df_unified[display_cols].reset_index(drop=True),
             use_container_width=True,
@@ -175,7 +250,7 @@ def render():
                 data=_to_csv_bytes(df_unified),
                 file_name="unified.csv",
                 mime="text/csv",
-                help="Registros únicos con información completa.",
+                help="Registros únicos con información completa, incluida la columna 'country' si viene de EBSCO.",
             )
 
         with col_dl2:
