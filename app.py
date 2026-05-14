@@ -57,5 +57,5 @@ elif page_key == "r4":
     render_r4()
 
 elif page_key == "r5":
-    st.title("R5 · Visualización Científica")
-    st.info("EN CURSO Requerimiento 5 en desarrollo.")
+    from src.r5_visualization.page import render as render_r5
+    render_r5()
