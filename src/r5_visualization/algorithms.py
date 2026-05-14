@@ -648,7 +648,7 @@ def make_timeline_figure(
         ax2.spines["top"].set_visible(False)
         ax2.spines["right"].set_visible(False)
 
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.08, right=0.97, top=0.95, bottom=0.1, hspace=0.45)
     return fig
 
 
@@ -801,7 +801,7 @@ def generate_pdf_report(
 
 
 def _add_page_footer(fig: plt.Figure, text: str) -> None:
-    """Agrega pie de página sutil a una figura matplotlib."""
+    """Agrega pie de pagina sutil a una figura matplotlib."""
     fig.text(
         0.5, 0.005, text,
         ha="center", va="bottom", fontsize=6.5,
