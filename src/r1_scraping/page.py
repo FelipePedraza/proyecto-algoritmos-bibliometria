@@ -43,8 +43,8 @@ def render():
         `"generative artificial intelligence"`, unificarlos en un solo dataset
         y eliminar duplicados automáticamente.
 
-        > 💡 **EBSCO** es opcional pero recomendado: su columna `authorLocations`
-        > habilita el **mapa de calor geográfico** en el Requerimiento 5.
+        > 💡 **EBSCO** es opcional pero recomendado: aporta datos geográficos
+        > (columna `authorLocations` o países en `subjects`) que habilitan el **mapa de calor geográfico** en R5.
         """
     )
 
@@ -89,7 +89,7 @@ def render():
         ebsco_file = st.file_uploader(
             "Sube el CSV de EBSCO", type=["csv"], key="ebsco_upload",
             help="Business Source Ultimate, Academic Search, etc. "
-                 "Aporta datos geográficos (authorLocations) para el R5.",
+                 "Aporta datos geográficos (columna authorLocations o países en subjects) para el mapa en R5.",
         )
         if ebsco_file:
             st.success(f"✅ {ebsco_file.name} cargado")
@@ -128,11 +128,16 @@ def render():
                     f"Total de filas: {len(df_ebsco_raw)}  •  "
                     f"Columnas: {', '.join(df_ebsco_raw.columns.tolist())}"
                 )
-                # Indicar si authorLocations está presente
-                if "authorLocations" in df_ebsco_raw.columns:
+                # Detectar si hay datos geográficos (authorLocations o subjects con países)
+                _geo_cols = {"authorLocations", "Author Locations", "authorAffiliations",
+                             "affiliations", "subjects", "subject"}
+                _has_geo = bool(_geo_cols & set(df_ebsco_raw.columns))
+                if "authorLocations" in df_ebsco_raw.columns or "Author Locations" in df_ebsco_raw.columns:
                     st.success("✅ Columna `authorLocations` detectada — el mapa geográfico estará disponible en R5.")
+                elif "subjects" in df_ebsco_raw.columns:
+                    st.success("✅ Columna `subjects` detectada — el país se extraerá automáticamente de los subject terms para el mapa en R5.")
                 else:
-                    st.warning("⚠️ No se encontró la columna `authorLocations` en este CSV.")
+                    st.warning("⚠️ No se encontró columna geográfica (`authorLocations` ni `subjects`) en este CSV.")
                 ebsco_file.seek(0)
             except Exception as e:
                 st.error(f"Error al previsualizar EBSCO: {e}")
@@ -221,7 +226,7 @@ def render():
             if has_country:
                 st.success("✅ Datos geográficos (country) presentes en el dataset — el mapa del R5 estará activo.")
             else:
-                st.warning("⚠️ EBSCO cargado pero sin datos en `authorLocations`. El mapa geográfico del R5 puede no funcionar.")
+                st.warning("⚠️ EBSCO procesado pero no se encontraron países en los datos. El mapa geográfico del R5 puede estar vacío.")
 
         # Tabla de registros unificados
         st.subheader("Registros unificados")
