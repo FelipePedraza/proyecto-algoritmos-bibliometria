@@ -1,6 +1,12 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # docker-compose.yml — Bibliometría · IA Generativa
 # Universidad del Quindío · Análisis de Algoritmos
+#
+# Uso:
+#   docker compose up --build   ← solo la primera vez (o si cambia requirements.txt)
+#   docker compose up           ← veces siguientes (segundos)
+#   docker compose restart      ← aplicar cambios en .streamlit/config.toml
+#   docker compose down         ← detener
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -15,10 +21,13 @@ services:
     ports:
       - "8501:8501"
 
-    # Volúmenes persistentes para datos procesados entre sesiones
     volumes:
+      # Datos persistentes entre sesiones
       - bibliometria_data:/app/data/processed
       - bibliometria_duplicates:/app/data/duplicates
+      # Config de Streamlit montada como volumen:
+      # cambios en .streamlit/config.toml solo requieren "docker compose restart"
+      - ./.streamlit:/app/.streamlit:ro
 
     environment:
       - STREAMLIT_SERVER_PORT=8501
@@ -29,7 +38,6 @@ services:
 
     restart: unless-stopped
 
-    # Recursos recomendados: los modelos de IA requieren RAM suficiente
     deploy:
       resources:
         limits:
