@@ -49,8 +49,8 @@ elif page_key == "r2":
     render_r2()
 
 elif page_key == "r3":
-    st.title("R3 · Frecuencia de Términos")
-    st.info("EN CURSO Requerimiento 3 en desarrollo.")
+    from src.r3_frequency.page import render as render_r3
+    render_r3()
 
 elif page_key == "r4":
     from src.r4_clustering.page import render as render_r4
