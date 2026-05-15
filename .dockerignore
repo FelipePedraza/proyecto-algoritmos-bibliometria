@@ -1,0 +1,50 @@
+# ── Control de versiones ──────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Entorno virtual Python ────────────────────────────────────────────────────
+.venv
+venv
+env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Archivos de desarrollo ────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+
+# ── Artefactos de construcción ────────────────────────────────────────────────
+*.egg-info
+dist
+build
+.eggs
+
+# ── IDE y editores ────────────────────────────────────────────────────────────
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+tests/
+.pytest_cache
+.coverage
+htmlcov/
+
+# ── Documentación (opcional: comentar si quieres incluirla) ───────────────────
+docs/
+
+# ── Notebooks ─────────────────────────────────────────────────────────────────
+*.ipynb
+.ipynb_checkpoints
+
+# ── Archivos temporales ───────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
