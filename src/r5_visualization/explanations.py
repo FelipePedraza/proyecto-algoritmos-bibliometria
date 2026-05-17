@@ -17,7 +17,7 @@ from __future__ import annotations
 
 def explain_geo_heatmap() -> str:
     return """
-### 🗺️ Mapa de Calor Geográfico — Explicación del Algoritmo
+###  Mapa de Calor Geográfico — Explicación del Algoritmo
 
 #### Objetivo
 Visualizar la distribución geográfica de la producción científica, identificando
@@ -103,7 +103,7 @@ usando una escala secuencial (blanco → amarillo → naranja → rojo).
 
 def explain_wordcloud() -> str:
     return """
-### ☁️ Nube de Palabras — Explicación del Algoritmo
+###  Nube de Palabras — Explicación del Algoritmo
 
 #### Objetivo
 Identificar los **términos más representativos** del corpus bibliométrico,
@@ -181,7 +181,7 @@ sin necesidad de reconfiguraciones.
 
 def explain_timeline() -> str:
     return """
-### 📅 Línea Temporal — Explicación del Algoritmo
+###  Línea Temporal — Explicación del Algoritmo
 
 #### Objetivo
 Mostrar la **evolución temporal** de la producción científica sobre
@@ -265,7 +265,7 @@ top_sources = source_totals.nlargest(N).index.tolist()
 
 def explain_pdf_export() -> str:
     return """
-### 📄 Exportación a PDF — Explicación del Proceso
+###  Exportación a PDF — Explicación del Proceso
 
 #### Herramienta utilizada: `matplotlib.backends.backend_pdf.PdfPages`
 

@@ -695,7 +695,7 @@ CLUSTERING_ALGORITHMS = {
         "formula": r"d(A \cup B,\, C) = \max(d(A, C),\; d(B, C))",
         "func": complete_linkage,
         "color": "#E74C3C",
-        "icon": "🔴",
+        "icon": "",
         "description": (
             "Usa la distancia MÁXIMA entre cualquier par de puntos "
             "de los dos clusters. Produce clusters compactos."
@@ -707,7 +707,7 @@ CLUSTERING_ALGORITHMS = {
         "formula": r"d(A \cup B,\, C) = \frac{|A| \cdot d(A,C) + |B| \cdot d(B,C)}{|A| + |B|}",
         "func": average_linkage,
         "color": "#27AE60",
-        "icon": "🟢",
+        "icon": "",
         "description": (
             "Usa la distancia PROMEDIO ponderada entre clusters. "
             "Balanceado y menos sensible a outliers."
@@ -719,7 +719,7 @@ CLUSTERING_ALGORITHMS = {
         "formula": r"d(A \cup B,\, C)^2 = \frac{(n_A+n_C) d(A,C)^2 + (n_B+n_C) d(B,C)^2 - n_C\, d(A,B)^2}{n_A+n_B+n_C}",
         "func": ward_linkage,
         "color": "#2980B9",
-        "icon": "🔵",
+        "icon": "",
         "description": (
             "Minimiza el incremento de varianza intra-cluster. "
             "Produce clusters de tamaño equilibrado."

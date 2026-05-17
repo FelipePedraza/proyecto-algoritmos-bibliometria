@@ -37,7 +37,7 @@ from src.r1_scraping.unifier import unify_databases
 logger = logging.getLogger(__name__)
 
 # ── Constantes de UI ─────────────────────────────────────────────────────────
-PAGE_TITLE        = "R1 · Automatización y Unificación Bibliométrica"
+PAGE_TITLE        = "R1 - Automatizacion y Unificacion Bibliometrica"
 THRESHOLD_DEFAULT = 0.92
 OA_JSONL_PATH     = "data/raw/openalex_raw.jsonl"
 OA_DEFAULT_QUERY  = "generative artificial intelligence"
@@ -46,37 +46,49 @@ OA_MAX_DEFAULT    = 500
 
 def render():
     """Renderiza la página completa del Requerimiento 1."""
-    st.title("Requerimiento 1: Automatización y Unificación")
+    st.title("Requerimiento 1: Automatizacion y Unificacion")
     st.markdown(
         """
         **Objetivo:** Recopilar artículos sobre *"generative artificial intelligence"*
         desde múltiples fuentes, unificarlos en un solo dataset y eliminar duplicados.
 
-        Usa la pestaña **📂 Carga manual** para subir CSV exportados de ACM, ScienceDirect
-        o EBSCO, o la pestaña **🔍 OpenAlex API** para descargar artículos automáticamente
+        Usa la pestaña **Carga manual** para subir CSV exportados de ACM, ScienceDirect
+        o EBSCO, o la pestaña **OpenAlex API** para descargar artículos automáticamente
         sin necesidad de exportar archivos.
         """
     )
 
-    # ── Sidebar de configuración ─────────────────────────────────────────────
-    with st.sidebar:
-        st.header("Configuración")
-        threshold = st.slider(
-            "Umbral de similitud para duplicados",
-            min_value=0.80,
-            max_value=1.00,
-            value=THRESHOLD_DEFAULT,
-            step=0.01,
-            help=(
-                "Dos títulos se consideran duplicados si su similitud "
-                "de Levenshtein ≥ este valor. 0.92 es el valor recomendado."
-            ),
+    # ── Configuración de unificación (en el cuerpo principal) ────────────────
+    with st.container(border=True):
+        st.subheader("Configuracion de duplicados")
+        st.caption(
+            "Define el umbral de similitud para detectar artículos duplicados. "
+            "Dos títulos se consideran duplicados si su similitud de Levenshtein "
+            "es mayor o igual a este valor."
         )
-        st.caption("Similitud calculada sobre títulos normalizados (sin acentos, minúsculas).")
+        col_thr, col_info = st.columns([1, 2])
+        with col_thr:
+            threshold = st.slider(
+                "Umbral de similitud",
+                min_value=0.80,
+                max_value=1.00,
+                value=THRESHOLD_DEFAULT,
+                step=0.01,
+                help=(
+                    "0.92 es el valor recomendado. Valores más altos = menos "
+                    "duplicados detectados. Valores más bajos = más agresivo."
+                ),
+            )
+        with col_info:
+            st.info(
+                f"**Umbral actual: {threshold:.2f}**  \n"
+                "Similitud calculada sobre títulos normalizados (sin acentos, minúsculas).  \n"
+                "Valor recomendado: **0.92**"
+            )
 
     # ── Pestañas de fuentes ───────────────────────────────────────────────────
     st.header("1. Fuentes de datos")
-    tab_csv, tab_oa = st.tabs(["📂 Carga manual (CSV)", "🔍 OpenAlex API (automático)"])
+    tab_csv, tab_oa = st.tabs(["Carga manual (CSV)", "OpenAlex API (automatico)"])
 
     # ═══════════════════════════════════════════════════════════════════════════
     # Pestaña 1: Carga manual de CSV
@@ -95,7 +107,7 @@ def render():
                 "Sube el CSV de ACM", type=["csv"], key="acm_upload"
             )
             if acm_file:
-                st.success(f"✅ {acm_file.name} cargado")
+                st.success(f"{acm_file.name} cargado")
 
         with col2:
             st.subheader("ScienceDirect")
@@ -103,7 +115,7 @@ def render():
                 "Sube el CSV de ScienceDirect", type=["csv"], key="sd_upload"
             )
             if sd_file:
-                st.success(f"✅ {sd_file.name} cargado")
+                st.success(f"{sd_file.name} cargado")
 
         with col3:
             st.subheader("EBSCO *(opcional)*")
@@ -113,7 +125,7 @@ def render():
                      "Aporta datos geográficos (authorLocations) para el mapa en R5.",
             )
             if ebsco_file:
-                st.success(f"✅ {ebsco_file.name} cargado")
+                st.success(f"{ebsco_file.name} cargado")
 
         # ── Vista previa de CSV cargados ──────────────────────────────────────
         loaded_csv = [f for f in [acm_file, sd_file, ebsco_file] if f is not None]
@@ -147,16 +159,16 @@ def render():
                     df_ebsco_raw = pd.read_csv(ebsco_file, encoding="utf-8-sig", dtype=str)
                     st.dataframe(df_ebsco_raw.head(10), use_container_width=True)
                     st.caption(
-                        f"Total de filas: {len(df_ebsco_raw)}  •  "
+                        f"Total de filas: {len(df_ebsco_raw)}  |  "
                         f"Columnas: {', '.join(df_ebsco_raw.columns.tolist())}"
                     )
                     _geo_cols = {"authorLocations", "Author Locations", "subjects"}
                     if "authorLocations" in df_ebsco_raw.columns or "Author Locations" in df_ebsco_raw.columns:
-                        st.success("✅ Columna `authorLocations` detectada — el mapa geográfico estará disponible en R5.")
+                        st.success("Columna `authorLocations` detectada — el mapa geografico estara disponible en R5.")
                     elif "subjects" in df_ebsco_raw.columns:
-                        st.success("✅ Columna `subjects` detectada — país se extrae de subject terms.")
+                        st.success("Columna `subjects` detectada — pais se extrae de subject terms.")
                     else:
-                        st.warning("⚠️ No se encontró columna geográfica (`authorLocations` ni `subjects`).")
+                        st.warning("No se encontro columna geografica (`authorLocations` ni `subjects`).")
                     ebsco_file.seek(0)
                 except Exception as e:
                     st.error(f"Error al previsualizar EBSCO: {e}")
@@ -177,7 +189,7 @@ def render():
         ebsco_file = None
 
     # ── Botón de unificación ──────────────────────────────────────────────────
-    st.header("2. Unificación automática")
+    st.header("2. Unificacion automatica")
 
     has_csv  = any(f is not None for f in [acm_file, sd_file, ebsco_file])
     has_oa   = bool(st.session_state.get("r1_oa_df") is not None
@@ -186,11 +198,11 @@ def render():
 
     if not can_run:
         st.info(
-            "Sube al menos un archivo CSV **o** realiza una búsqueda en OpenAlex "
-            "para habilitar la unificación."
+            "Sube al menos un archivo CSV **o** realiza una busqueda en OpenAlex "
+            "para habilitar la unificacion."
         )
 
-    if can_run and st.button("Ejecutar unificación", type="primary"):
+    if can_run and st.button("Ejecutar unificacion", type="primary"):
         with st.spinner("Procesando y detectando duplicados..."):
             try:
                 df_acm    = _safe_parse(acm_file,   parse_acm_csv)
@@ -214,10 +226,10 @@ def render():
                 st.session_state["r1_sd_count"]    = len(df_sd) if df_sd is not None else 0
                 st.session_state["r1_ebsco_count"] = len(df_ebsco) if df_ebsco is not None else 0
                 st.session_state["r1_oa_count"]    = len(df_oa) if df_oa is not None else 0
-                st.success("✅ Unificación completada.")
+                st.success("Unificacion completada.")
 
             except Exception as e:
-                st.error(f"❌ Error durante la unificación: {e}")
+                st.error(f"Error durante la unificacion: {e}")
                 logger.exception("Unification error")
 
     # ── Resultados ────────────────────────────────────────────────────────────
@@ -239,7 +251,7 @@ def render():
         mc[2].metric("EBSCO",         ebsco_count)
         mc[3].metric("OpenAlex",      oa_count)
         mc[4].metric(
-            "Registros únicos", len(df_unified),
+            "Registros unicos", len(df_unified),
             delta=f"-{total_input - len(df_unified)} dup.",
         )
         mc[5].metric("Duplicados eliminados", len(df_duplicates))
@@ -251,9 +263,9 @@ def render():
                 and df_unified["country"].str.strip().replace("", pd.NA).notna().any()
             )
             if has_country:
-                st.success("✅ Datos geográficos (country) presentes — el mapa del R5 estará activo.")
+                st.success("Datos geograficos (country) presentes — el mapa del R5 estara activo.")
             else:
-                st.warning("⚠️ EBSCO procesado pero sin países detectados. El mapa del R5 puede estar vacío.")
+                st.warning("EBSCO procesado pero sin paises detectados. El mapa del R5 puede estar vacio.")
 
         # Tabla de registros unificados
         st.subheader("Registros unificados")
@@ -293,7 +305,7 @@ def render():
             )
 
         # ── Distribución por fuente ───────────────────────────────────────────
-        st.subheader("Distribución por base de datos (registros únicos)")
+        st.subheader("Distribucion por base de datos (registros unicos)")
         dist = df_unified["source_db"].value_counts().reset_index()
         dist.columns = ["Base de datos", "Registros"]
         st.bar_chart(dist.set_index("Base de datos"))
@@ -338,12 +350,12 @@ def _render_openalex_tab():
     # ── Formulario de búsqueda ────────────────────────────────────────────────
     with st.form("openalex_search_form"):
         oa_query = st.text_input(
-            "Término de búsqueda",
+            "Termino de busqueda",
             value=OA_DEFAULT_QUERY,
             help="Se envía al parámetro ?search= de la API de OpenAlex.",
         )
         oa_max = st.slider(
-            "Número máximo de artículos",
+            "Numero maximo de articulos",
             min_value=50,
             max_value=5000,
             value=OA_MAX_DEFAULT,
@@ -354,14 +366,14 @@ def _render_openalex_tab():
             ),
         )
         oa_overwrite = st.checkbox(
-            "Sobreescribir caché JSONL existente",
+            "Sobreescribir cache JSONL existente",
             value=False,
             help=(
                 "Si está desactivado y ya existe data/raw/openalex_raw.jsonl, "
                 "los nuevos resultados se añaden al final del archivo."
             ),
         )
-        submitted = st.form_submit_button("🔍 Buscar en OpenAlex", type="primary")
+        submitted = st.form_submit_button("Buscar en OpenAlex", type="primary")
 
     # ── Ejecutar búsqueda ─────────────────────────────────────────────────────
     if submitted and oa_query.strip():
@@ -373,7 +385,7 @@ def _render_openalex_tab():
 
 def _run_openalex_search(query: str, max_results: int, overwrite: bool):
     """Ejecuta la búsqueda en OpenAlex con barra de progreso y almacena el JSONL."""
-    progress_bar  = st.progress(0.0, text="Iniciando búsqueda en OpenAlex...")
+    progress_bar  = st.progress(0.0, text="Iniciando busqueda en OpenAlex...")
     status_text   = st.empty()
     client        = OpenAlexClient()
     all_records   = []
@@ -394,10 +406,10 @@ def _run_openalex_search(query: str, max_results: int, overwrite: bool):
                     fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
             pct = min(downloaded / max(total_estimated, 1), 1.0)
-            progress_bar.progress(pct, text=f"Descargados {downloaded:,} de ~{total_estimated:,} artículos")
-            status_text.text(f"Última página: {len(batch)} registros")
+            progress_bar.progress(pct, text=f"Descargados {downloaded:,} de ~{total_estimated:,} articulos")
+            status_text.text(f"Ultima pagina: {len(batch)} registros")
 
-        progress_bar.progress(1.0, text="✅ Descarga completada")
+        progress_bar.progress(1.0, text="Descarga completada")
         status_text.empty()
 
         # Parsear al esquema canónico y guardar en session_state
@@ -407,13 +419,13 @@ def _run_openalex_search(query: str, max_results: int, overwrite: bool):
         st.session_state["r1_oa_raw"]   = all_records
 
         st.success(
-            f"✅ **{len(df_oa):,} artículos** descargados de OpenAlex para la query "
+            f"**{len(df_oa):,} articulos** descargados de OpenAlex para la query "
             f"*\"{query}\"*.  Guardados en `{OA_JSONL_PATH}`."
         )
 
     except Exception as exc:
         progress_bar.empty()
-        st.error(f"❌ Error al consultar OpenAlex: {exc}")
+        st.error(f"Error al consultar OpenAlex: {exc}")
         logger.exception("OpenAlex search error")
 
 
@@ -427,11 +439,11 @@ def _show_openalex_results():
         if jsonl_path.exists():
             n_lines = sum(1 for _ in jsonl_path.open("r", encoding="utf-8") if _.strip())
             st.info(
-                f"Se encontró un caché previo con **{n_lines:,} registros** en "
-                f"`{OA_JSONL_PATH}`.  Pulsa el botón para cargarlos sin realizar "
-                "una nueva búsqueda."
+                f"Se encontro un cache previo con **{n_lines:,} registros** en "
+                f"`{OA_JSONL_PATH}`.  Pulsa el boton para cargarlos sin realizar "
+                "una nueva busqueda."
             )
-            if st.button("📂 Cargar resultados del caché JSONL"):
+            if st.button("Cargar resultados del cache JSONL"):
                 raw = read_jsonl(OA_JSONL_PATH)
                 df_oa = parse_openalex_records(raw)
                 st.session_state["r1_oa_df"]  = df_oa
@@ -444,15 +456,15 @@ def _show_openalex_results():
 
     query = st.session_state.get("r1_oa_query", "")
     st.markdown(f"---")
-    st.subheader(f"Vista previa — {len(df_oa):,} artículos de OpenAlex")
+    st.subheader(f"Vista previa — {len(df_oa):,} articulos de OpenAlex")
     if query:
         st.caption(f"Query: *\"{query}\"*")
 
     # Métricas rápidas
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Total artículos",  len(df_oa))
+    m1.metric("Total articulos",  len(df_oa))
     m2.metric("Con abstract",     int((df_oa["abstract"].str.strip() != "").sum()))
-    m3.metric("Con país",         int((df_oa["country"].str.strip() != "").sum()))
+    m3.metric("Con pais",         int((df_oa["country"].str.strip() != "").sum()))
     m4.metric("Con DOI",          int((df_oa["doi"].str.strip() != "").sum()))
 
     # Tabla de preview (primeras 50 filas)
@@ -466,7 +478,7 @@ def _show_openalex_results():
         st.caption(f"Mostrando 50 de {len(df_oa):,} registros.")
 
     # Distribución por año
-    with st.expander("Distribución por año de publicación", expanded=False):
+    with st.expander("Distribucion por anio de publicacion", expanded=False):
         year_dist = (
             df_oa[df_oa["year"].str.strip() != ""]["year"]
             .value_counts()
@@ -475,7 +487,7 @@ def _show_openalex_results():
         st.bar_chart(year_dist)
 
     # Opción de limpiar
-    if st.button("🗑️ Limpiar resultados de OpenAlex", help="Elimina los resultados de la sesión (no borra el JSONL en disco)."):
+    if st.button("Limpiar resultados de OpenAlex", help="Elimina los resultados de la sesion (no borra el JSONL en disco)."):
         st.session_state.pop("r1_oa_df",    None)
         st.session_state.pop("r1_oa_raw",   None)
         st.session_state.pop("r1_oa_query", None)

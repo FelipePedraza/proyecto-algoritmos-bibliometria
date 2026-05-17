@@ -24,7 +24,7 @@ def explain_preprocessing(tokens_sample: List[List[str]], titles: List[str]) -> 
             preview += f", ... (+{len(toks) - 12} más)"
         examples += f"**{i+1}. {titles[i][:60]}{'…' if len(titles[i])>60 else ''}**\n→ {preview}\n\n"
 
-    return f"""### 🔧 Preprocesamiento de Texto
+    return f"""###  Preprocesamiento de Texto
 
 El preprocesamiento transforma los abstracts crudos en representaciones
 limpias y normalizadas, eliminando ruido para mejorar la calidad del clustering.
@@ -74,7 +74,7 @@ def explain_tfidf(vocab_size: int, n_docs: int, vocabulary_sample: List[str]) ->
     if len(vocabulary_sample) > 15:
         vocab_preview += f", ... (+{vocab_size - 15} más)"
 
-    return f"""### 📊 Vectorización TF-IDF
+    return f"""###  Vectorización TF-IDF
 
 Cada abstract se convierte en un vector de **{vocab_size} dimensiones**
 (una por término en el vocabulario).
@@ -123,7 +123,7 @@ La mayoría de los valores son 0 (el abstract no usa ese término).
 
 def explain_cosine_distance() -> str:
     """Explicación de la distancia coseno."""
-    return """### 📐 Distancia Coseno
+    return """###  Distancia Coseno
 
 Para medir qué tan parecidos son dos abstracts, usamos la **distancia coseno**:
 
@@ -139,9 +139,9 @@ Donde:
 
 | Criterio | Distancia Euclídea | Distancia Coseno |
 |----------|-------------------|-----------------|
-| Sensibilidad a longitud | Alta | Baja ✓ |
-| Textos de diferente extensión | Penaliza ✗ | No penaliza ✓ |
-| Uso en NLP | Moderado | Estándar ✓ |
+| Sensibilidad a longitud | Alta | Baja  |
+| Textos de diferente extensión | Penaliza  | No penaliza  |
+| Uso en NLP | Moderado | Estándar  |
 
 La distancia coseno solo mide la **dirección** del vector (el ángulo entre ellos),
 no su magnitud. Dos textos con las mismas palabras pero diferente longitud
@@ -174,7 +174,7 @@ def explain_complete_linkage(trace: dict) -> str:
         label_b = f"Doc {int(b)}" if b < n else f"Cluster {int(b)}"
         merge_table += f"| {k+1} | {label_a} | {label_b} | {d:.4f} | {int(s)} |\n"
 
-    return f"""### 🔴 Enlace Completo (Complete Linkage)
+    return f"""###  Enlace Completo (Complete Linkage)
 
 #### Regla de distancia
 
@@ -238,7 +238,7 @@ def explain_average_linkage(trace: dict) -> str:
         label_b = f"Doc {int(b)}" if b < n else f"Cluster {int(b)}"
         merge_table += f"| {k+1} | {label_a} | {label_b} | {d:.4f} | {int(s)} |\n"
 
-    return f"""### 🟢 Enlace Promedio (Average Linkage / UPGMA)
+    return f"""###  Enlace Promedio (Average Linkage / UPGMA)
 
 #### Regla de distancia
 
@@ -307,7 +307,7 @@ def explain_ward_linkage(trace: dict) -> str:
         label_b = f"Doc {int(b)}" if b < n else f"Cluster {int(b)}"
         merge_table += f"| {k+1} | {label_a} | {label_b} | {d:.4f} | {int(s)} |\n"
 
-    return f"""### 🔵 Método de Ward
+    return f"""###  Método de Ward
 
 #### Criterio de fusión
 
@@ -380,7 +380,7 @@ def explain_cophenetic(coph_scores: dict, best_algo: str, algo_names: dict) -> s
     """Explicación del coeficiente cofenético y conclusión sobre el mejor algoritmo."""
     rows = ""
     for key, score in sorted(coph_scores.items(), key=lambda x: -x[1]):
-        is_best = "⭐ **Mejor**" if key == best_algo else ""
+        is_best = " **Mejor**" if key == best_algo else ""
         rows += f"| {algo_names.get(key, key)} | {score:.4f} | {is_best} |\n"
 
     best_name = algo_names.get(best_algo, best_algo)
@@ -393,7 +393,7 @@ def explain_cophenetic(coph_scores: dict, best_algo: str, algo_names: dict) -> s
         else "baja (< 0.60)"
     )
 
-    return f"""### 📏 Coeficiente de Correlación Cofenética
+    return f"""###  Coeficiente de Correlación Cofenética
 
 #### Definición
 

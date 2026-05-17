@@ -69,16 +69,17 @@ def render():
     df_valid = df[df["abstract"].str.strip() != ""].reset_index(drop=True)
 
     if len(df_valid) < 2:
-        st.error("❌ Se necesitan al menos 2 artículos con abstract.")
+        st.error("Se necesitan al menos 2 articulos con abstract.")
         return
 
-    st.success(f"✅ {len(df_valid)} artículos con abstract disponibles.")
+    st.success(f"{len(df_valid)} articulos con abstract disponibles.")
 
     # ── Sección 1: Configuración ──────────────────────────────────────────────
     st.markdown("---")
-    st.header("1. Configuración")
+    st.header("1. Configuracion")
 
-    with st.expander("⚙️ Parámetros del pipeline", expanded=True):
+    with st.container(border=True):
+        st.subheader("Parametros del pipeline")
         col1, col2 = st.columns(2)
 
         with col1:
@@ -100,9 +101,9 @@ def render():
 
         col3, col4 = st.columns(2)
         with col3:
-            remove_sw = st.checkbox("Eliminar stop words", value=True, key="r4_sw")
+            remove_sw = st.checkbox("Eliminar stop words (recomendado)", value=True, key="r4_sw")
         with col4:
-            apply_stem = st.checkbox("Aplicar stemming", value=True, key="r4_stem")
+            apply_stem = st.checkbox("Aplicar stemming (recomendado)", value=True, key="r4_stem")
 
     # Seleccionar subset de artículos
     if sort_option == "Aleatorio":
@@ -122,15 +123,15 @@ def render():
         titles_full = labels
 
     st.caption(
-        f"Se procesarán **{n_articles} artículos** | "
-        f"Stop words: {'✅' if remove_sw else '❌'} | "
-        f"Stemming: {'✅' if apply_stem else '❌'}"
+        f"Se procesaran **{n_articles} articulos** | "
+        f"Stop words: {'Si' if remove_sw else 'No'} | "
+        f"Stemming: {'Si' if apply_stem else 'No'}"
     )
 
     # ── Sección 2: Ejecutar pipeline ──────────────────────────────────────────
     st.markdown("---")
     run_btn = st.button(
-        "🚀 Ejecutar clustering jerárquico",
+        "Ejecutar clustering jerarquico",
         type="primary",
         key="r4_run",
     )
@@ -146,20 +147,20 @@ def render():
                 apply_stemming=apply_stem,
             )
 
-            progress.progress(100, text="¡Completado!")
+            progress.progress(100, text="Completado!")
             progress.empty()
 
         st.session_state["r4_result"] = result
         st.session_state["r4_labels"] = labels
         st.session_state["r4_titles_full"] = titles_full
         st.success(
-            f"✅ Pipeline ejecutado — {n_articles} documentos × "
-            f"{result['vocabulary_size']} términos en vocabulario"
+            f"Pipeline ejecutado — {n_articles} documentos x "
+            f"{result['vocabulary_size']} terminos en vocabulario"
         )
 
     # ── Mostrar resultados si existen ─────────────────────────────────────────
     if "r4_result" not in st.session_state:
-        st.info("Pulsa **Ejecutar clustering jerárquico** para comenzar.")
+        st.info("Pulsa **Ejecutar clustering jerarquico** para comenzar.")
         return
 
     result = st.session_state["r4_result"]
@@ -178,7 +179,7 @@ def render():
     st.markdown("---")
     st.header("2. Preprocesamiento y Vectorización")
 
-    with st.expander("🔧 Pipeline de preprocesamiento (ver detalle)", expanded=False):
+    with st.expander("Pipeline de preprocesamiento (ver detalle)", expanded=False):
         st.markdown(explain_preprocessing(processed_tokens, titles_full))
 
     # Tabla de tokens por documento
@@ -194,7 +195,7 @@ def render():
     df_tokens = pd.DataFrame(token_data)
     st.dataframe(df_tokens, use_container_width=True, hide_index=True)
 
-    with st.expander("📊 Vectorización TF-IDF y distancia coseno", expanded=False):
+    with st.expander("Vectorizacion TF-IDF y distancia coseno", expanded=False):
         st.markdown(explain_tfidf(result["vocabulary_size"], n, vocab[:30]))
         st.markdown("---")
         st.markdown(explain_cosine_distance())
@@ -239,12 +240,12 @@ def render():
     for key, algo in CLUSTERING_ALGORITHMS.items():
         icon = ALGO_ICONS[key]
         name = ALGO_NAMES[key]
-        with st.expander(f"{icon} {name} — Ver explicación detallada"):
+        with st.expander(f"{name} — Ver explicacion detallada"):
             explain_fn = ALGO_EXPLANATION_FUNCS.get(key)
             if explain_fn:
                 st.markdown(explain_fn(result))
 
-    with st.expander("📏 Coeficiente de Correlación Cofenética — Ver explicación"):
+    with st.expander("Coeficiente de Correlacion Cofenetica — Ver explicacion"):
         st.markdown(
             explain_cophenetic(coph_scores, best_algo, ALGO_NAMES)
         )
@@ -257,11 +258,11 @@ def _load_dataset() -> pd.DataFrame | None:
     """Carga el dataset unificado desde sesión (R1) o desde archivo CSV."""
     # Opción 1: Reutilizar del R1
     if "r1_unified" in st.session_state:
-        st.success("✅ Dataset del Requerimiento 1 disponible en sesión.")
+        st.success("Dataset del Requerimiento 1 disponible en sesion.")
         use_r1 = st.checkbox("Usar dataset del R1", value=True, key="r4_use_r1")
         if use_r1:
             df = st.session_state["r1_unified"]
-            st.caption(f"📊 {len(df)} artículos en el dataset")
+            st.caption(f"{len(df)} articulos en el dataset")
             return df
 
     # Opción 2: Cargar CSV
@@ -272,11 +273,11 @@ def _load_dataset() -> pd.DataFrame | None:
         try:
             df = pd.read_csv(uploaded, encoding="utf-8-sig", dtype=str).fillna("")
             if "abstract" not in df.columns:
-                st.error("❌ El archivo debe contener la columna 'abstract'.")
+                st.error("El archivo debe contener la columna 'abstract'.")
                 return None
             if "title" not in df.columns:
                 df["title"] = [f"Artículo {i}" for i in range(len(df))]
-            st.success(f"✅ {uploaded.name} cargado — {len(df)} artículos")
+            st.success(f"{uploaded.name} cargado — {len(df)} articulos")
             return df
         except Exception as e:
             st.error(f"Error al leer el archivo: {e}")
@@ -341,7 +342,7 @@ def _render_dendrograms(
         from scipy.cluster.hierarchy import dendrogram
     except ImportError:
         st.error(
-            "❌ scipy no está instalado. Ejecuta: `pip install scipy`"
+            "scipy no esta instalado. Ejecuta: `pip install scipy`"
         )
         return
 
@@ -380,11 +381,11 @@ def _render_dendrograms(
         )
 
         coph = coph_scores.get(key, 0.0)
-        quality = "⭐" if coph == max(coph_scores.values()) else ""
+        quality = "(MEJOR)" if coph == max(coph_scores.values()) else ""
 
         ax.set_title(
-            f"{algo['icon']} {algo['name']}\n"
-            f"Cofenético: {coph:.4f} {quality}",
+            f"{algo['name']}\n"
+            f"Cofenetico: {coph:.4f} {quality}",
             fontsize=10,
             pad=8,
         )
@@ -410,10 +411,10 @@ def _render_quality_metrics(coph_scores: dict, best_algo: str, result: dict):
         coph = coph_scores.get(key, 0.0)
         is_best = key == best_algo
         rows.append({
-            "Algoritmo": f"{algo['icon']} {algo['name']}",
+            "Algoritmo": f"{algo['name']}",
             "Coeficiente Cofenético": round(coph, 4),
             "Calidad": _quality_label(coph),
-            "Mejor": "⭐ Sí" if is_best else "",
+            "Mejor": "Si" if is_best else "",
         })
 
     df_quality = pd.DataFrame(rows)
@@ -477,11 +478,10 @@ def _render_quality_metrics(coph_scores: dict, best_algo: str, result: dict):
     # Conclusión
     best_name = CLUSTERING_ALGORITHMS[best_algo]["name"]
     best_coph = coph_scores[best_algo]
-    best_icon = ALGO_ICONS[best_algo]
 
     st.success(
-        f"**Conclusión:** El algoritmo con agrupamientos más coherentes es "
-        f"{best_icon} **{best_name}** con un coeficiente cofenético de **{best_coph:.4f}** "
+        f"**Conclusion:** El algoritmo con agrupamientos mas coherentes es "
+        f"**{best_name}** con un coeficiente cofenetico de **{best_coph:.4f}** "
         f"({_quality_label(best_coph)}). "
         f"Esto significa que su dendrograma preserva mejor la estructura de distancias "
         f"original entre los abstracts."
@@ -493,7 +493,7 @@ def _render_quality_metrics(coph_scores: dict, best_algo: str, result: dict):
 
 def _render_algorithm_comparison(coph_scores: dict, best_algo: str):
     """Muestra una comparación narrativa de los algoritmos."""
-    with st.expander("📖 ¿Por qué este algoritmo es el mejor?"):
+    with st.expander("Por que este algoritmo es el mejor?"):
         sorted_algos = sorted(coph_scores.items(), key=lambda x: -x[1])
         ranking_text = "\n".join(
             f"{i+1}. **{CLUSTERING_ALGORITHMS[k]['name']}** ({v:.4f}) — "

@@ -66,14 +66,15 @@ def render() -> None:
     if df is None or df.empty:
         return
 
-    st.success(f"✅ Dataset cargado: **{len(df)} artículos** disponibles.")
+    st.success(f"Dataset cargado: **{len(df)} articulos** disponibles.")
     _show_dataset_summary(df)
 
     # ── Configuración global ─────────────────────────────────────────────────
     st.markdown("---")
-    st.header("⚙️ Configuración")
+    st.header("Configuracion")
 
-    with st.expander("Parámetros de visualización", expanded=False):
+    with st.container(border=True):
+        st.subheader("Parametros de visualizacion")
         col1, col2, col3 = st.columns(3)
         with col1:
             top_words = st.slider(
@@ -131,7 +132,7 @@ def render() -> None:
 
     # ── Sección 1: Mapa de calor geográfico ──────────────────────────────────
     st.markdown("---")
-    st.header("1. 🗺️ Mapa de Calor Geográfico")
+    st.header("1. Mapa de Calor Geografico")
     st.markdown(
         "Distribución de publicaciones por país del **primer autor**. "
         "El color indica el volumen de publicaciones: de azul claro (pocas) a rojo oscuro (muchas)."
@@ -139,12 +140,12 @@ def render() -> None:
 
     _render_geo_section(df, country_counts)
 
-    with st.expander("📖 Explicación matemática y algorítmica", expanded=False):
+    with st.expander("Explicacion matematica y algoritmica", expanded=False):
         st.markdown(explain_geo_heatmap())
 
     # ── Sección 2: Nube de palabras ───────────────────────────────────────────
     st.markdown("---")
-    st.header("2. ☁️ Nube de Palabras")
+    st.header("2. Nube de Palabras")
     st.markdown(
         "Términos más frecuentes en abstracts y keywords del corpus. "
         "El **tamaño** de cada término es proporcional a su frecuencia acumulada. "
@@ -153,12 +154,12 @@ def render() -> None:
 
     _render_wordcloud_section(freq_dict)
 
-    with st.expander("📖 Explicación matemática y algorítmica", expanded=False):
+    with st.expander("Explicacion matematica y algoritmica", expanded=False, key="r5_wc_explain"):
         st.markdown(explain_wordcloud())
 
     # ── Sección 3: Línea temporal ─────────────────────────────────────────────
     st.markdown("---")
-    st.header("3. 📅 Línea Temporal de Publicaciones")
+    st.header("3. Linea Temporal de Publicaciones")
     st.markdown(
         "Evolución de publicaciones por año y distribución entre las "
         f"**top {top_sources}** revistas/conferencias del corpus."
@@ -166,17 +167,17 @@ def render() -> None:
 
     _render_timeline_section(df_by_year, df_by_year_source, top_sources)
 
-    with st.expander("📖 Explicación matemática y algorítmica", expanded=False):
+    with st.expander("Explicacion matematica y algoritmica", expanded=False, key="r5_tl_explain"):
         st.markdown(explain_timeline())
 
     # ── Sección 4: Exportar PDF ───────────────────────────────────────────────
     st.markdown("---")
-    st.header("4. 📤 Exportar a PDF")
+    st.header("4. Exportar a PDF")
     _render_export_section(
         country_counts, freq_dict, df_by_year, df_by_year_source, len(df)
     )
 
-    with st.expander("📖 Detalles del proceso de exportación", expanded=False):
+    with st.expander("Detalles del proceso de exportacion", expanded=False):
         st.markdown(explain_pdf_export())
 
 
@@ -189,7 +190,7 @@ def _load_dataset() -> pd.DataFrame | None:
 
     # Opción 1: reutilizar resultado del R1 (ya en session_state)
     if "r1_unified" in st.session_state:
-        st.success("✅ Dataset del Requerimiento 1 disponible en sesión.")
+        st.success("Dataset del Requerimiento 1 disponible en sesion.")
         use_r1 = st.checkbox("Usar dataset del R1", value=True, key="r5_use_r1")
         if use_r1:
             return st.session_state["r1_unified"]
@@ -216,9 +217,9 @@ def _load_dataset() -> pd.DataFrame | None:
             )
         )
         if "title" not in df.columns:
-            st.error("❌ El CSV debe tener al menos la columna `title`.")
+            st.error("El CSV debe tener al menos la columna `title`.")
             return None
-        st.success(f"✅ {uploaded.name} cargado — {len(df)} artículos")
+        st.success(f"{uploaded.name} cargado — {len(df)} articulos")
         return df
     except Exception as exc:
         st.error(f"Error al leer el archivo: {exc}")
@@ -239,16 +240,16 @@ def _show_dataset_summary(df: pd.DataFrame) -> None:
     )
 
     geo_col = detect_country_column(df)
-    geo_status = f"✅ Columna: `{geo_col}`" if geo_col else "⚠️ Sin datos de país"
+    geo_status = f"Columna: `{geo_col}`" if geo_col else "Sin datos de pais"
 
-    col1.metric("📄 Artículos", len(df))
-    col2.metric("📝 Con abstract", n_with_abstract)
-    col3.metric("🔑 Con keywords", n_with_keywords)
-    col4.metric("📅 Rango de años", year_range)
+    col1.metric("Articulos", len(df))
+    col2.metric("Con abstract", n_with_abstract)
+    col3.metric("Con keywords", n_with_keywords)
+    col4.metric("Rango de anios", year_range)
 
     if not geo_col:
         st.warning(
-            "⚠️ **Sin datos geográficos:** el dataset no contiene columnas de país ni afiliación. "
+            "**Sin datos geograficos:** el dataset no contiene columnas de pais ni afiliacion. "
             "El mapa de calor mostrará un estado vacío. Para habilitarlo, agrega una columna "
             "`country` o `affiliations` al CSV con el país del primer autor."
         )
@@ -259,7 +260,7 @@ def _render_geo_section(df: pd.DataFrame, country_counts: dict[str, int]) -> Non
 
     if not country_counts:
         st.info(
-            "📍 No se encontraron datos de país en el dataset. "
+            "No se encontraron datos de pais en el dataset. "
             "Agrega una columna `country` o `affiliations` al CSV "
             "para ver el mapa de calor."
         )
@@ -269,10 +270,10 @@ def _render_geo_section(df: pd.DataFrame, country_counts: dict[str, int]) -> Non
     # Métricas
     total_with_country = sum(country_counts.values())
     col1, col2, col3 = st.columns(3)
-    col1.metric("🌍 Países identificados", len(country_counts))
-    col2.metric("📄 Artículos con país", total_with_country)
+    col1.metric("Paises identificados", len(country_counts))
+    col2.metric("Articulos con pais", total_with_country)
     col3.metric(
-        "🥇 País líder",
+        "Pais lider",
         max(country_counts, key=country_counts.get),
         delta=str(max(country_counts.values())),
     )
@@ -307,7 +308,7 @@ def _render_geo_section(df: pd.DataFrame, country_counts: dict[str, int]) -> Non
 
         if not geo_df_niso.empty:
             st.caption(
-                f"⚠️ {len(geo_df_niso)} países sin código ISO-3 no aparecen en el mapa: "
+                f"{len(geo_df_niso)} paises sin codigo ISO-3 no aparecen en el mapa: "
                 + ", ".join(geo_df_niso["country"].tolist())
             )
 
@@ -315,7 +316,7 @@ def _render_geo_section(df: pd.DataFrame, country_counts: dict[str, int]) -> Non
         st.warning("Plotly no disponible — mostrando tabla de datos geográficos.")
 
     # Tabla de países
-    with st.expander("📊 Ver tabla de países", expanded=False):
+    with st.expander("Ver tabla de paises", expanded=False):
         geo_df_table = build_geo_dataframe(country_counts)
         geo_df_table.index = range(1, len(geo_df_table) + 1)
         geo_df_table.columns = ["País", "ISO-3", "Publicaciones"]
@@ -324,7 +325,7 @@ def _render_geo_section(df: pd.DataFrame, country_counts: dict[str, int]) -> Non
 
 def _show_demo_geo_option() -> None:
     """Muestra un modo demo del mapa con datos de muestra."""
-    if st.checkbox("🔬 Ver demostración con datos de ejemplo", key="r5_geo_demo"):
+    if st.checkbox("Ver demostracion con datos de ejemplo", key="r5_geo_demo"):
         demo_data = {
             "United States": 42, "China": 38, "Germany": 15,
             "United Kingdom": 12, "India": 11, "South Korea": 9,
@@ -332,7 +333,7 @@ def _show_demo_geo_option() -> None:
             "Japan": 5, "Italy": 4, "Netherlands": 4, "Spain": 3,
             "Singapore": 3,
         }
-        st.info("📍 Datos de demostración — no corresponden al dataset cargado.")
+        st.info("Datos de demostracion — no corresponden al dataset cargado.")
 
         try:
             import plotly.express as px
@@ -377,10 +378,10 @@ def _render_wordcloud_section(freq_dict: dict[str, int]) -> None:
     # Métricas
     top5 = list(freq_dict.items())[:5]
     col1, col2, col3 = st.columns(3)
-    col1.metric("📝 Términos únicos", len(freq_dict))
-    col2.metric("🔤 Término más frecuente", top5[0][0], delta=str(top5[0][1]))
+    col1.metric("Terminos unicos", len(freq_dict))
+    col2.metric("Termino mas frecuente", top5[0][0], delta=str(top5[0][1]))
     col3.metric(
-        "📊 Top 5 frecuencia media",
+        "Top 5 frecuencia media",
         f"{sum(v for _, v in top5) / len(top5):.0f}",
     )
 
@@ -402,7 +403,7 @@ def _render_wordcloud_section(freq_dict: dict[str, int]) -> None:
         _render_frequency_fallback(freq_dict)
 
     # Top 30 palabras en tabla expandible
-    with st.expander("📊 Ver tabla de frecuencias (top 30)", expanded=False):
+    with st.expander("Ver tabla de frecuencias (top 30)", expanded=False):
         import pandas as pd
         top30 = list(freq_dict.items())[:30]
         df_freq = pd.DataFrame(top30, columns=["Término", "Frecuencia"])
@@ -451,12 +452,12 @@ def _render_timeline_section(
     n_years = len(df_by_year)
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("📚 Total publicaciones", total_pubs)
-    col2.metric("📅 Año pico", str(peak_year), delta=f"{peak_count} pubs")
-    col3.metric("🗓️ Años cubiertos", n_years)
+    col1.metric("Total publicaciones", total_pubs)
+    col2.metric("Anio pico", str(peak_year), delta=f"{peak_count} pubs")
+    col3.metric("Anios cubiertos", n_years)
     if not df_by_year_source.empty:
         n_sources = df_by_year_source["source_short"].nunique()
-        col4.metric("📰 Fuentes únicas", n_sources)
+        col4.metric("Fuentes unicas", n_sources)
 
     # ── Visualización interactiva con Plotly ──────────────────────────────────
     try:
@@ -532,7 +533,7 @@ def _render_timeline_section(
         plt.close(fig)
 
     # Tabla detallada
-    with st.expander("📊 Ver datos por año y fuente", expanded=False):
+    with st.expander("Ver datos por anio y fuente", expanded=False):
         if not df_by_year_source.empty:
             st.dataframe(df_by_year_source, use_container_width=True, hide_index=True)
         else:
@@ -557,17 +558,17 @@ def _render_export_section(
 
     with col_btn:
         generate_btn = st.button(
-            "🖨️ Generar PDF",
+            "Generar PDF",
             type="primary",
             key="r5_gen_pdf",
         )
 
     with col_info:
         st.caption(
-            f"📄 Contenido: portada + 3 páginas de visualizaciones  \n"
-            f"🌍 {len(country_counts)} países · "
-            f"☁️ {len(freq_dict)} términos · "
-            f"📅 {len(df_by_year)} años"
+            f"Contenido: portada + 3 paginas de visualizaciones  \n"
+            f"{len(country_counts)} paises | "
+            f"{len(freq_dict)} terminos | "
+            f"{len(df_by_year)} anios"
         )
 
     if generate_btn:
@@ -581,14 +582,14 @@ def _render_export_section(
                     n_articles=n_articles,
                 )
                 st.session_state["r5_pdf_bytes"] = pdf_bytes
-                st.success("✅ PDF generado correctamente.")
+                st.success("PDF generado correctamente.")
             except Exception as exc:
                 st.error(f"Error al generar el PDF: {exc}")
                 logger.exception("Error generando PDF en R5")
 
     if "r5_pdf_bytes" in st.session_state:
         st.download_button(
-            label="⬇️ Descargar PDF",
+            label="Descargar PDF",
             data=st.session_state["r5_pdf_bytes"],
             file_name="r5_visualizacion_bibliometrica.pdf",
             mime="application/pdf",

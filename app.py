@@ -26,11 +26,11 @@ st.sidebar.caption("Universidad del Quindío")
 st.sidebar.markdown("---")
 
 PAGES = {
-    "R1 · Automatización y Unificación":     "r1",
-    "R2 · Similitud Textual":                "r2",
-    "R3 · Frecuencia de Términos":           "r3",
-    "R4 · Agrupamiento Jerárquico":          "r4",
-    "R5 · Visualización Científica":         "r5",
+    "R1 - Automatizacion y Unificacion":     "r1",
+    "R2 - Similitud Textual":                "r2",
+    "R3 - Frecuencia de Terminos":           "r3",
+    "R4 - Agrupamiento Jerarquico":          "r4",
+    "R5 - Visualizacion Cientifica":         "r5",
 }
 
 selection = st.sidebar.radio("Selecciona un requerimiento", list(PAGES.keys()))

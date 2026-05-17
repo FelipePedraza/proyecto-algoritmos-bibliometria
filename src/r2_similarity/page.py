@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 # Nombres más amigables para los algoritmos
 ALGO_LABELS = {
-    "levenshtein": "1. Distancia de Levenshtein (edición)",
+    "levenshtein": "1. Distancia de Levenshtein (edicion)",
     "jaccard": "2. Similitud de Jaccard (conjuntos)",
-    "cosine_tfidf": "3. Coseno TF-IDF (vectorización)",
-    "hamming": "4. Distancia de Hamming (edición)",
+    "cosine_tfidf": "3. Coseno TF-IDF (vectorizacion)",
+    "hamming": "4. Distancia de Hamming (edicion)",
     "sbert": "5. Sentence-BERT (IA — Transformers)",
     "spacy": "6. spaCy Word Vectors (IA — GloVe)",
 }
@@ -52,7 +52,7 @@ def render():
         return
 
     # ── Selección de artículos ───────────────────────────────────────────────
-    st.header("1. Selección de artículos")
+    st.header("1. Seleccion de articulos")
 
     # Crear etiquetas descriptivas para el selector
     df["_label"] = df.apply(
@@ -63,75 +63,77 @@ def render():
 
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Artículo A")
-        idx_a = st.selectbox("Selecciona el primer artículo", range(len(labels)),
+        st.subheader("Articulo A")
+        idx_a = st.selectbox("Selecciona el primer articulo", range(len(labels)),
                              format_func=lambda i: labels[i], key="sel_a")
     with col2:
-        st.subheader("Artículo B")
+        st.subheader("Articulo B")
         default_b = min(1, len(labels) - 1)
-        idx_b = st.selectbox("Selecciona el segundo artículo", range(len(labels)),
+        idx_b = st.selectbox("Selecciona el segundo articulo", range(len(labels)),
                              format_func=lambda i: labels[i], key="sel_b",
                              index=default_b)
 
     if idx_a == idx_b:
-        st.warning("⚠️ Has seleccionado el mismo artículo. Los resultados serán 1.0 para todos los algoritmos.")
+        st.warning("Has seleccionado el mismo articulo. Los resultados seran 1.0 para todos los algoritmos.")
 
     # Mostrar abstracts
     abstract_a = str(df.iloc[idx_a].get("abstract", ""))
     abstract_b = str(df.iloc[idx_b].get("abstract", ""))
 
-    with st.expander("📄 Ver abstracts seleccionados", expanded=True):
+    with st.expander("Ver abstracts seleccionados", expanded=True):
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown(f"**Artículo A:** {df.iloc[idx_a]['title']}")
+            st.markdown(f"**Articulo A:** {df.iloc[idx_a]['title']}")
             if abstract_a.strip():
                 st.text_area("Abstract A", abstract_a, height=200, disabled=True,
                              key="abs_a_display")
             else:
-                st.warning("Este artículo no tiene abstract disponible.")
+                st.warning("Este articulo no tiene abstract disponible.")
         with c2:
-            st.markdown(f"**Artículo B:** {df.iloc[idx_b]['title']}")
+            st.markdown(f"**Articulo B:** {df.iloc[idx_b]['title']}")
             if abstract_b.strip():
                 st.text_area("Abstract B", abstract_b, height=200, disabled=True,
                              key="abs_b_display")
             else:
-                st.warning("Este artículo no tiene abstract disponible.")
+                st.warning("Este articulo no tiene abstract disponible.")
 
     if not abstract_a.strip() or not abstract_b.strip():
-        st.error("❌ Ambos artículos deben tener abstract para ejecutar la comparación.")
+        st.error("Ambos articulos deben tener abstract para ejecutar la comparacion.")
         return
 
-    # ── Selección de algoritmos ──────────────────────────────────────────────
+    # ── Selección de algoritmos (en el cuerpo principal) ─────────────────────
     st.header("2. Algoritmos de similitud")
 
-    with st.sidebar:
-        st.header("⚙️ Algoritmos")
-        st.caption("Selecciona los algoritmos a ejecutar")
+    with st.container(border=True):
+        st.subheader("Selecciona los algoritmos a ejecutar")
+        col_classic, col_ai = st.columns(2)
 
-        st.markdown("**Clásicos:**")
-        selected_classical = []
-        for key in CLASSICAL_KEYS:
-            if st.checkbox(ALGO_LABELS[key], value=True, key=f"chk_{key}"):
-                selected_classical.append(key)
+        with col_classic:
+            st.markdown("**Algoritmos clasicos:**")
+            selected_classical = []
+            for key in CLASSICAL_KEYS:
+                if st.checkbox(ALGO_LABELS[key], value=True, key=f"chk_{key}"):
+                    selected_classical.append(key)
 
-        st.markdown("**Modelos de IA:**")
-        selected_ai = []
-        for key in AI_KEYS:
-            if st.checkbox(ALGO_LABELS[key], value=True, key=f"chk_{key}"):
-                selected_ai.append(key)
+        with col_ai:
+            st.markdown("**Modelos de IA:**")
+            selected_ai = []
+            for key in AI_KEYS:
+                if st.checkbox(ALGO_LABELS[key], value=True, key=f"chk_{key}"):
+                    selected_ai.append(key)
 
     selected = selected_classical + selected_ai
 
     if not selected:
-        st.info("Selecciona al menos un algoritmo en la barra lateral.")
+        st.info("Selecciona al menos un algoritmo para continuar.")
         return
 
     # ── Ejecución ────────────────────────────────────────────────────────────
-    if st.button("🔬 Ejecutar análisis de similitud", type="primary"):
+    if st.button("Ejecutar analisis de similitud", type="primary"):
         results = {}
         traces = {}
 
-        progress = st.progress(0, text="Iniciando análisis...")
+        progress = st.progress(0, text="Iniciando analisis...")
 
         for i, key in enumerate(selected):
             algo = ALGORITHMS[key]
@@ -168,7 +170,7 @@ def render():
 
     # ── Matriz de similitud (opcional) ───────────────────────────────────────
     st.markdown("---")
-    st.header("4. Matriz de similitud (todos los artículos)")
+    st.header("4. Matriz de similitud (todos los articulos)")
     _render_similarity_matrix(df)
 
 
@@ -178,11 +180,11 @@ def _load_dataset() -> pd.DataFrame | None:
 
     # Opción 1: Reutilizar del R1
     if "r1_unified" in st.session_state:
-        st.success("✅ Dataset del Requerimiento 1 disponible en sesión.")
+        st.success("Dataset del Requerimiento 1 disponible en sesion.")
         use_r1 = st.checkbox("Usar dataset del R1", value=True, key="use_r1")
         if use_r1:
             df = st.session_state["r1_unified"]
-            st.caption(f"📊 {len(df)} artículos disponibles")
+            st.caption(f"{len(df)} articulos disponibles")
             return df
 
     # Opción 2: Cargar CSV
@@ -195,9 +197,9 @@ def _load_dataset() -> pd.DataFrame | None:
         try:
             df = pd.read_csv(uploaded, encoding="utf-8-sig", dtype=str).fillna("")
             if "title" not in df.columns or "abstract" not in df.columns:
-                st.error("❌ El archivo debe contener las columnas 'title' y 'abstract'.")
+                st.error("El archivo debe contener las columnas 'title' y 'abstract'.")
                 return None
-            st.success(f"✅ {uploaded.name} cargado — {len(df)} artículos")
+            st.success(f"{uploaded.name} cargado — {len(df)} articulos")
             return df
         except Exception as e:
             st.error(f"Error al leer el archivo: {e}")
@@ -252,7 +254,7 @@ def _render_results(results: dict, traces: dict, selected: list[str]):
         bars = ax.barh(names, values, color=colors, edgecolor="white", linewidth=0.5)
         ax.set_xlim(0, 1.05)
         ax.set_xlabel("Similitud")
-        ax.set_title("Comparación de Algoritmos de Similitud")
+        ax.set_title("Comparacion de Algoritmos de Similitud")
 
         # Etiquetas en las barras
         for bar, val in zip(bars, values):
@@ -265,7 +267,7 @@ def _render_results(results: dict, traces: dict, selected: list[str]):
         plt.close(fig)
 
         # Leyenda
-        st.caption("🔵 Algoritmo clásico · 🔴 Modelo de IA")
+        st.caption("Azul = Algoritmo clasico | Rosa = Modelo de IA")
 
     # ── Explicaciones paso a paso ────────────────────────────────────────────
     st.subheader("Explicaciones paso a paso")
@@ -275,17 +277,17 @@ def _render_results(results: dict, traces: dict, selected: list[str]):
         trace = traces.get(key, {})
 
         if "error" in trace:
-            with st.expander(f"❌ {algo['name']} — Error"):
+            with st.expander(f"{algo['name']} — Error"):
                 st.error(trace["error"])
             continue
 
-        with st.expander(f"📖 {algo['name']} — Ver explicación detallada"):
+        with st.expander(f"{algo['name']} — Ver explicacion detallada"):
             explain_fn = EXPLANATION_FUNCS.get(key)
             if explain_fn:
                 explanation = explain_fn(trace)
                 st.markdown(explanation)
             else:
-                st.info("Explicación no disponible.")
+                st.info("Explicacion no disponible.")
 
 
 def _render_similarity_matrix(df: pd.DataFrame):
@@ -294,11 +296,11 @@ def _render_similarity_matrix(df: pd.DataFrame):
     df_with_abs = df[df["abstract"].str.strip() != ""].reset_index(drop=True)
 
     if len(df_with_abs) < 2:
-        st.warning("Se necesitan al menos 2 artículos con abstract.")
+        st.warning("Se necesitan al menos 2 articulos con abstract.")
         return
 
     max_articles = st.slider(
-        "Número de artículos a incluir",
+        "Numero de articulos a incluir",
         min_value=2,
         max_value=min(20, len(df_with_abs)),
         value=min(5, len(df_with_abs)),
@@ -312,7 +314,7 @@ def _render_similarity_matrix(df: pd.DataFrame):
         key="matrix_algo",
     )
 
-    if st.button("📊 Generar matriz de similitud", key="gen_matrix"):
+    if st.button("Generar matriz de similitud", key="gen_matrix"):
         subset = df_with_abs.head(max_articles)
         abstracts = subset["abstract"].tolist()
         titles = [t[:40] + "…" if len(t) > 40 else t for t in subset["title"].tolist()]

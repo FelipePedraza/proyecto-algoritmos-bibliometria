@@ -42,15 +42,15 @@ _COLOR_PRECISION  = "#27AE60"   # verde para precisión
 
 def render() -> None:
     """Renderiza la página completa del Requerimiento 3."""
-    st.title("Requerimiento 3: Frecuencia de Términos")
+    st.title("Requerimiento 3: Frecuencia de Terminos")
     st.markdown(
         f"""
-        **Categoría analizada:** *{CATEGORY_NAME}*
+        **Categoria analizada:** *{CATEGORY_NAME}*
 
-        **Objetivo:** Calcular la frecuencia de los 15 términos predefinidos de la
-        categoría en los abstracts del corpus, extraer algorítmicamente nuevas palabras
-        asociadas usando **Información Mutua Puntual Normalizada (NPMI)**, y evaluar la
-        precisión de los términos descubiertos.
+        **Objetivo:** Calcular la frecuencia de los 15 terminos predefinidos de la
+        categoria en los abstracts del corpus, extraer algoritmicamente nuevas palabras
+        asociadas usando **Informacion Mutua Puntual Normalizada (NPMI)**, y evaluar la
+        precision de los terminos descubiertos.
         """
     )
 
@@ -68,62 +68,65 @@ def render() -> None:
     ]
 
     if not abstracts:
-        st.error("❌ No se encontraron abstracts válidos en el dataset.")
+        st.error("No se encontraron abstracts validos en el dataset.")
         return
 
-    st.success(f"✅ **{len(abstracts)}** abstracts disponibles para análisis.")
+    st.success(f"**{len(abstracts)}** abstracts disponibles para analisis.")
 
-    # ── Configuración en la barra lateral ────────────────────────────────────
-    with st.sidebar:
-        st.header("⚙️ Configuración R3")
-
-        max_new_terms = st.slider(
-            "Máximo de nuevas palabras",
-            min_value=5,
-            max_value=15,
-            value=15,
-            key="r3_max_terms",
-            help="Número máximo de nuevas palabras asociadas a extraer (≤ 15).",
-        )
-
-        min_doc_freq = st.slider(
-            "Frecuencia mínima de documento",
-            min_value=1,
-            max_value=max(1, len(abstracts) // 10),
-            value=2,
-            key="r3_min_df",
-            help=(
-                "Un candidato debe aparecer al menos en este número de abstracts "
-                "para ser considerado. Valores mayores reducen el ruido."
-            ),
-        )
-
-        include_bigrams = st.checkbox(
-            "Incluir bigramas (pares de palabras)",
-            value=True,
-            key="r3_bigrams",
-            help=(
-                "Si está activo, analiza también pares de palabras consecutivas "
-                "(ej. 'language model', 'text generation')."
-            ),
-        )
-
-        st.markdown("---")
+    # ── Configuracion del analisis ────────────────────────────────────────────
+    with st.container(border=True):
+        st.subheader("Configuracion del analisis")
         st.caption(
-            f"Categoría: *{CATEGORY_NAME}*\n\n"
-            f"Términos predefinidos: **{len(CATEGORY_TERMS)}**"
+            f"Categoria: *{CATEGORY_NAME}* | "
+            f"Terminos predefinidos: **{len(CATEGORY_TERMS)}**"
         )
+
+        col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
+
+        with col_cfg1:
+            max_new_terms = st.slider(
+                "Maximo de nuevas palabras",
+                min_value=5,
+                max_value=15,
+                value=15,
+                key="r3_max_terms",
+                help="Numero maximo de nuevas palabras asociadas a extraer (max 15).",
+            )
+
+        with col_cfg2:
+            min_doc_freq = st.slider(
+                "Frecuencia minima de documento",
+                min_value=1,
+                max_value=max(1, len(abstracts) // 10),
+                value=2,
+                key="r3_min_df",
+                help=(
+                    "Un candidato debe aparecer al menos en este numero de abstracts "
+                    "para ser considerado. Valores mayores reducen el ruido."
+                ),
+            )
+
+        with col_cfg3:
+            include_bigrams = st.checkbox(
+                "Incluir bigramas (pares de palabras)",
+                value=True,
+                key="r3_bigrams",
+                help=(
+                    "Si esta activo, analiza tambien pares de palabras consecutivas "
+                    "(ej. 'language model', 'text generation')."
+                ),
+            )
 
     # ── Botón de ejecución ───────────────────────────────────────────────────
     st.markdown("---")
     run_btn = st.button(
-        "🔍 Ejecutar análisis de frecuencia",
+        "Ejecutar analisis de frecuencia",
         type="primary",
         key="r3_run",
     )
 
     if run_btn:
-        with st.spinner("Analizando abstracts…"):
+        with st.spinner("Analizando abstracts..."):
             result = run_r3_pipeline(
                 abstracts=abstracts,
                 max_new_terms=max_new_terms,
@@ -135,7 +138,7 @@ def render() -> None:
 
     # ── Mostrar resultados si existen ────────────────────────────────────────
     if "r3_result" not in st.session_state:
-        st.info("Pulsa **Ejecutar análisis de frecuencia** para comenzar.")
+        st.info("Pulsa **Ejecutar analisis de frecuencia** para comenzar.")
         return
 
     result = st.session_state["r3_result"]
@@ -146,14 +149,14 @@ def render() -> None:
 
     # ── Sección 1: Términos predefinidos ─────────────────────────────────────
     st.markdown("---")
-    st.header("1. Frecuencia de Términos Predefinidos")
+    st.header("1. Frecuencia de Terminos Predefinidos")
     st.markdown(
         "Frecuencia de cada uno de los **15 términos** de la categoría "
         f"*{CATEGORY_NAME}* en el corpus de abstracts."
     )
     _render_predefined_frequencies(result)
 
-    with st.expander("📖 Explicación del algoritmo de conteo", expanded=False):
+    with st.expander("Explicacion del algoritmo de conteo", expanded=False):
         st.markdown(
             explain_frequency_counting(
                 result["predefined_frequencies"],
@@ -163,26 +166,26 @@ def render() -> None:
 
     # ── Sección 2: Nuevas palabras extraídas ─────────────────────────────────
     st.markdown("---")
-    st.header("2. Extracción de Nuevas Palabras Asociadas (NPMI)")
+    st.header("2. Extraccion de Nuevas Palabras Asociadas (NPMI)")
     st.markdown(
         "Nuevas palabras descubiertas algorítmicamente que están estadísticamente "
         "asociadas a la categoría. Ordenadas por **NPMI** (mayor = más asociadas)."
     )
     _render_new_terms(result)
 
-    with st.expander("📖 Explicación del algoritmo NPMI", expanded=False):
+    with st.expander("Explicacion del algoritmo NPMI", expanded=False):
         st.markdown(explain_npmi_algorithm(result))
 
     # ── Sección 3: Evaluación de precisión ───────────────────────────────────
     st.markdown("---")
-    st.header("3. Evaluación de Precisión")
+    st.header("3. Evaluacion de Precision")
     st.markdown(
         "Para cada nuevo término, la **precisión** mide en qué fracción de los "
         "documentos donde aparece también se encuentran conceptos de la categoría."
     )
     _render_precision(result)
 
-    with st.expander("📖 Explicación de la métrica de precisión", expanded=False):
+    with st.expander("Explicacion de la metrica de precision", expanded=False):
         st.markdown(
             explain_precision_evaluation(
                 result["new_terms"],
@@ -200,11 +203,11 @@ def _load_dataset() -> pd.DataFrame | None:
     """Carga el dataset desde la sesión del R1 o desde un archivo CSV."""
 
     if "r1_unified" in st.session_state:
-        st.success("✅ Dataset del Requerimiento 1 disponible en sesión.")
+        st.success("Dataset del Requerimiento 1 disponible en sesion.")
         use_r1 = st.checkbox("Usar dataset del R1", value=True, key="r3_use_r1")
         if use_r1:
             df = st.session_state["r1_unified"]
-            st.caption(f"📊 {len(df)} artículos disponibles.")
+            st.caption(f"{len(df)} articulos disponibles.")
             return df
 
     st.info(
@@ -224,9 +227,9 @@ def _load_dataset() -> pd.DataFrame | None:
             )
         )
         if "abstract" not in df.columns:
-            st.error("❌ El CSV debe contener la columna `abstract`.")
+            st.error("El CSV debe contener la columna `abstract`.")
             return None
-        st.success(f"✅ {uploaded.name} cargado — {len(df)} artículos.")
+        st.success(f"{uploaded.name} cargado — {len(df)} articulos.")
         return df
     except Exception as exc:
         st.error(f"Error al leer el archivo: {exc}")
@@ -240,23 +243,23 @@ def _render_global_stats(result: dict) -> None:
     pct = result["category_coverage_pct"]
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("📄 Abstracts analizados", n)
+    col1.metric("Abstracts analizados", n)
     col2.metric(
-        "🎯 Abstracts con ≥1 término de categoría",
+        "Abstracts con min. 1 termino de categoria",
         n_cat,
         delta=f"{pct:.1f}%",
     )
-    col3.metric("📚 Términos predefinidos", len(CATEGORY_TERMS))
-    col4.metric("🔍 Nuevas palabras encontradas", len(result["new_terms"]))
+    col3.metric("Terminos predefinidos", len(CATEGORY_TERMS))
+    col4.metric("Nuevas palabras encontradas", len(result["new_terms"]))
 
     if pct < 10:
         st.warning(
-            f"⚠️ Solo el {pct:.1f}% de los abstracts contienen términos de la categoría. "
+            f"Solo el {pct:.1f}% de los abstracts contienen terminos de la categoria. "
             "El NPMI puede no ser representativo con tan pocos documentos relevantes."
         )
     elif pct > 90:
         st.info(
-            f"ℹ️ El {pct:.1f}% de los abstracts contienen términos de la categoría. "
+            f"El {pct:.1f}% de los abstracts contienen terminos de la categoria. "
             "Esto indica un corpus muy específico al dominio. "
             "El NPMI puede converger a valores cercanos a 0 para términos muy frecuentes."
         )
@@ -347,7 +350,7 @@ def _render_predefined_frequencies(result: dict) -> None:
         )
 
     # ── Tabla detallada ───────────────────────────────────────────────────────
-    with st.expander("📊 Tabla detallada de frecuencias", expanded=True):
+    with st.expander("Tabla detallada de frecuencias", expanded=True):
         df_display = pd.DataFrame(
             [
                 {
@@ -356,9 +359,9 @@ def _render_predefined_frequencies(result: dict) -> None:
                     "Ocurrencias totales": data["total_occurrences"],
                     "% Abstracts": f"{data['doc_frequency_pct']:.1f}%",
                     "Estado": (
-                        "✅ Presente"
+                        "Presente"
                         if data["doc_frequency"] > 0
-                        else "⚪ Ausente"
+                        else "Ausente"
                     ),
                 }
                 for t, data in sorted_items
@@ -388,8 +391,8 @@ def _render_new_terms(result: dict) -> None:
 
     if not new_terms:
         st.warning(
-            "⚠️ No se encontraron nuevos términos con los parámetros actuales. "
-            "Prueba reduciendo la **Frecuencia mínima de documento** en la barra lateral."
+            "No se encontraron nuevos terminos con los parametros actuales. "
+            "Prueba reduciendo la **Frecuencia minima de documento** en la configuracion."
         )
         return
 
@@ -484,7 +487,7 @@ def _render_new_terms(result: dict) -> None:
     plt.close(fig)
 
     # ── Tabla detallada ───────────────────────────────────────────────────────
-    with st.expander("📊 Tabla detallada de nuevas palabras", expanded=True):
+    with st.expander("Tabla detallada de nuevas palabras", expanded=True):
         df_display = pd.DataFrame(
             [
                 {
@@ -589,7 +592,7 @@ def _render_precision(result: dict) -> None:
     plt.close(fig)
 
     # ── Scatter NPMI vs Precisión ─────────────────────────────────────────────
-    with st.expander("📈 Gráfico NPMI vs Precisión", expanded=False):
+    with st.expander("Grafico NPMI vs Precision", expanded=False):
         fig2, ax2 = plt.subplots(figsize=(9, 5))
 
         scatter_colors = [_PREC_COLORS.get(lbl, "#AAAAAA") for lbl in labels]
@@ -633,7 +636,7 @@ def _render_precision(result: dict) -> None:
         )
 
     # ── Tabla resumen de precisión ────────────────────────────────────────────
-    with st.expander("📊 Tabla completa de resultados", expanded=True):
+    with st.expander("Tabla completa de resultados", expanded=True):
         df_display = pd.DataFrame(
             [
                 {

@@ -36,7 +36,7 @@ def explain_frequency_counting(freq_results: Dict, n_abstracts: int) -> str:
             f"{data['doc_frequency_pct']:.1f}% |\n"
         )
 
-    return f"""### 📊 Frecuencia de Términos Predefinidos — Explicación
+    return f"""###  Frecuencia de Términos Predefinidos — Explicación
 
 #### Objetivo
 Medir la presencia de los 15 conceptos clave de la categoría
@@ -166,7 +166,7 @@ NPMI = \\frac{{PMI}}{{-\\log_2({p_wcat:.4f})}} \\approx \\mathbf{{{ex_npmi:.4f}}
 $$
 """
 
-    return f"""### 🔬 Extracción de Nuevas Palabras por NPMI — Explicación
+    return f"""###  Extracción de Nuevas Palabras por NPMI — Explicación
 
 #### Objetivo
 Descubrir algorítmicamente nuevos términos que están estadísticamente
@@ -302,7 +302,7 @@ def explain_precision_evaluation(new_terms: List[Dict], df_cat: int, n: int) -> 
     n_weak = sum(1 for t in new_terms if 0.25 <= t.get("precision", 0) < 0.50)
     n_low = sum(1 for t in new_terms if t.get("precision", 0) < 0.25)
 
-    return f"""### 🎯 Evaluación de Precisión — Explicación
+    return f"""###  Evaluación de Precisión — Explicación
 
 #### ¿Qué significa "precisar" un término extraído?
 

@@ -21,7 +21,7 @@ def explain_levenshtein(trace: dict) -> str:
     cols_s2 = min(len(s2), 15)
     truncated = len(s1) > 15 or len(s2) > 15
 
-    md = f"""### 📐 Distancia de Levenshtein — Explicación
+    md = f"""###  Distancia de Levenshtein — Explicación
 
 #### Fundamento matemático
 
@@ -89,7 +89,7 @@ Donde $c(i,j) = 0$ si $s_1[i] = s_2[j]$, y $c(i,j) = 1$ en caso contrario.
 
 def explain_jaccard(trace: dict) -> str:
     """Explicación paso a paso del algoritmo de Jaccard."""
-    return f"""### 📐 Similitud de Jaccard — Explicación
+    return f"""###  Similitud de Jaccard — Explicación
 
 #### Fundamento matemático
 
@@ -148,7 +148,7 @@ def explain_cosine_tfidf(trace: dict) -> str:
     for word, va, vb in top_words:
         words_table += f"| {word} | {va:.4f} | {vb:.4f} |\n"
 
-    return f"""### 📐 Coseno TF-IDF — Explicación
+    return f"""###  Coseno TF-IDF — Explicación
 
 #### Fundamento matemático
 
@@ -219,7 +219,7 @@ def explain_hamming(trace: dict) -> str:
         if len(diffs) > 5:
             diff_table += f"| ... | ... | ... |\n"
 
-    return f"""### 📐 Distancia de Hamming — Explicación
+    return f"""###  Distancia de Hamming — Explicación
 
 #### Fundamento matemático
 
@@ -267,12 +267,12 @@ $$
 def explain_sbert(trace: dict) -> str:
     """Explicación paso a paso del algoritmo Sentence-BERT."""
     if "error" in trace:
-        return f"⚠️ Error: {trace['error']}"
+        return f" Error: {trace['error']}"
 
     emb_a = [f"{v:.4f}" for v in trace["embedding_a_sample"]]
     emb_b = [f"{v:.4f}" for v in trace["embedding_b_sample"]]
 
-    return f"""### 🤖 Sentence-BERT — Explicación
+    return f"""###  Sentence-BERT — Explicación
 
 #### Fundamento
 
@@ -318,12 +318,12 @@ $$
 def explain_spacy(trace: dict) -> str:
     """Explicación paso a paso del algoritmo spaCy Word Vectors."""
     if "error" in trace:
-        return f"⚠️ Error: {trace['error']}"
+        return f" Error: {trace['error']}"
 
     vec_a = [f"{v:.4f}" for v in trace["vector_a_sample"]]
     vec_b = [f"{v:.4f}" for v in trace["vector_b_sample"]]
 
-    return f"""### 🤖 spaCy Word Vectors — Explicación
+    return f"""###  spaCy Word Vectors — Explicación
 
 #### Fundamento
 
